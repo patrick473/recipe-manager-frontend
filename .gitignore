@@ -1,0 +1,26 @@
+# Node modules
+node_modules/
+
+# Compiled output
+dist/
+tmp/
+out-tsc/
+
+# Angular cache
+.angular/cache/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment overrides (add project-specific envs manually)
+# src/environments/environment.prod.ts is committed intentionally
