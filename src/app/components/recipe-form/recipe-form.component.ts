@@ -1,5 +1,4 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { RecipeService } from '../../services/recipe.service';
@@ -14,91 +13,102 @@ import { Recipe } from '../../models/recipe.model';
  * Validation rules (mirroring the backend):
  *   - `title`   — required, max 255 chars
  *   - `content` — required
+ *
+ * Uses Angular 22 block control-flow syntax (@if / @else) and
+ * OnPush change detection.
  */
 @Component({
   selector: 'app-recipe-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="form-page-header">
       <div class="breadcrumb">
         <a routerLink="/recipes">Recipes</a>
-        <ng-container *ngIf="isEdit && recipe">
+        @if (isEdit && recipe) {
           <span> / </span>
           <a [routerLink]="['/recipes', recipe.id]">{{ recipe.title }}</a>
-        </ng-container>
+        }
         <span> / </span>
         <span>{{ isEdit ? 'Edit' : 'New Recipe' }}</span>
       </div>
     </div>
 
-    <div *ngIf="loadError" class="alert alert-error">{{ loadError }}</div>
+    @if (loadError) {
+      <div class="alert alert-error">{{ loadError }}</div>
+    }
 
-    <div *ngIf="loading" class="loading-spinner"><p>Loading…</p></div>
+    @if (loading) {
+      <div class="loading-spinner"><p>Loading…</p></div>
+    }
 
-    <div class="card" *ngIf="!loading">
-      <h2 class="form-title">{{ isEdit ? 'Edit Recipe' : 'New Recipe' }}</h2>
+    @if (!loading) {
+      <div class="card">
+        <h2 class="form-title">{{ isEdit ? 'Edit Recipe' : 'New Recipe' }}</h2>
 
-      <div *ngIf="submitError" class="alert alert-error">{{ submitError }}</div>
+        @if (submitError) {
+          <div class="alert alert-error">{{ submitError }}</div>
+        }
 
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
 
-        <!-- Title -->
-        <div class="form-group">
-          <label for="title">Title <span class="required-marker">*</span></label>
-          <input
-            id="title"
-            type="text"
-            formControlName="title"
-            placeholder="e.g. Classic Banana Bread"
-            [class.is-invalid]="isInvalid('title')"
-            autocomplete="off"
-          />
-          <span *ngIf="isInvalid('title')" class="field-error">
-            {{ titleError }}
-          </span>
-        </div>
+          <!-- Title -->
+          <div class="form-group">
+            <label for="title">Title <span class="required-marker">*</span></label>
+            <input
+              id="title"
+              type="text"
+              formControlName="title"
+              placeholder="e.g. Classic Banana Bread"
+              [class.is-invalid]="isInvalid('title')"
+              autocomplete="off"
+            />
+            @if (isInvalid('title')) {
+              <span class="field-error">{{ titleError }}</span>
+            }
+          </div>
 
-        <!-- Description -->
-        <div class="form-group">
-          <label for="description">Description <span class="optional-label">(optional)</span></label>
-          <input
-            id="description"
-            type="text"
-            formControlName="description"
-            placeholder="One-line summary shown in the recipe list"
-            autocomplete="off"
-          />
-        </div>
+          <!-- Description -->
+          <div class="form-group">
+            <label for="description">Description <span class="optional-label">(optional)</span></label>
+            <input
+              id="description"
+              type="text"
+              formControlName="description"
+              placeholder="One-line summary shown in the recipe list"
+              autocomplete="off"
+            />
+          </div>
 
-        <!-- Content (Markdown) -->
-        <div class="form-group">
-          <label for="content">Content (Markdown) <span class="required-marker">*</span></label>
-          <textarea
-            id="content"
-            formControlName="content"
-            rows="16"
-            placeholder="## Ingredients&#10;- ...&#10;&#10;## Steps&#10;1. ..."
-            [class.is-invalid]="isInvalid('content')"
-          ></textarea>
-          <span *ngIf="isInvalid('content')" class="field-error">
-            Content is required.
-          </span>
-        </div>
+          <!-- Content (Markdown) -->
+          <div class="form-group">
+            <label for="content">Content (Markdown) <span class="required-marker">*</span></label>
+            <textarea
+              id="content"
+              formControlName="content"
+              rows="16"
+              placeholder="## Ingredients&#10;- ...&#10;&#10;## Steps&#10;1. ..."
+              [class.is-invalid]="isInvalid('content')"
+            ></textarea>
+            @if (isInvalid('content')) {
+              <span class="field-error">Content is required.</span>
+            }
+          </div>
 
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary" [disabled]="submitting">
-            {{ submitting ? 'Saving…' : (isEdit ? 'Save Changes' : 'Create Recipe') }}
-          </button>
-          <ng-container *ngIf="isEdit && recipe; else cancelToList">
-            <a [routerLink]="['/recipes', recipe.id]" class="btn btn-secondary">Cancel</a>
-          </ng-container>
-          <ng-template #cancelToList>
-            <a routerLink="/recipes" class="btn btn-secondary">Cancel</a>
-          </ng-template>
-        </div>
-      </form>
-    </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" [disabled]="submitting">
+              {{ submitting ? 'Saving…' : (isEdit ? 'Save Changes' : 'Create Recipe') }}
+            </button>
+            @if (isEdit && recipe) {
+              <a [routerLink]="['/recipes', recipe.id]" class="btn btn-secondary">Cancel</a>
+            } @else {
+              <a routerLink="/recipes" class="btn btn-secondary">Cancel</a>
+            }
+          </div>
+        </form>
+      </div>
+    }
   `,
   styles: [`
     .form-page-header {

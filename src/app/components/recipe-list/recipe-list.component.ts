@@ -1,54 +1,70 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { DatePipe } from '@angular/common';
 import { Recipe } from '../../models/recipe.model';
 import { RecipeService } from '../../services/recipe.service';
 
 /**
  * Displays a card grid of all recipes. Each card links to the detail view.
  * Provides per-card delete with optimistic removal from the list.
+ *
+ * Uses Angular 22 block control-flow (@if / @for / @empty) and
+ * OnPush change detection for better runtime performance.
  */
 @Component({
-  selector: 'app-recipe-list',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
+    selector: 'app-recipe-list',
+    imports: [RouterLink, DatePipe],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    template: `
     <div class="recipe-list-header">
       <h2>Recipes</h2>
     </div>
 
-    <div *ngIf="error" class="alert alert-error">{{ error }}</div>
+    @if (error) {
+      <div class="alert alert-error">{{ error }}</div>
+    }
 
-    <div *ngIf="loading" class="loading-spinner">
-      <p>Loading recipes…</p>
-    </div>
-
-    <div *ngIf="!loading && recipes.length === 0 && !error" class="empty-state">
-      <h2>No recipes yet</h2>
-      <p>Create your first recipe to get started.</p>
-      <a routerLink="/recipes/new" class="btn btn-primary">+ New Recipe</a>
-    </div>
-
-    <div *ngIf="!loading && recipes.length > 0" class="recipe-grid">
-      <div *ngFor="let recipe of recipes" class="recipe-card card">
-        <div class="recipe-card-body">
-          <h3 class="recipe-card-title">
-            <a [routerLink]="['/recipes', recipe.id]">{{ recipe.title }}</a>
-          </h3>
-          <p *ngIf="recipe.description" class="recipe-card-description">{{ recipe.description }}</p>
-          <p *ngIf="!recipe.description" class="recipe-card-description muted">No description</p>
-          <p class="recipe-card-date">Updated {{ recipe.updatedAt | date:'mediumDate' }}</p>
-        </div>
-        <div class="recipe-card-actions">
-          <a [routerLink]="['/recipes', recipe.id, 'edit']" class="btn btn-secondary btn-sm">Edit</a>
-          <button class="btn btn-danger btn-sm" (click)="deleteRecipe(recipe)" [disabled]="deleting === recipe.id">
-            {{ deleting === recipe.id ? 'Deleting…' : 'Delete' }}
-          </button>
-        </div>
+    @if (loading) {
+      <div class="loading-spinner">
+        <p>Loading recipes…</p>
       </div>
-    </div>
+    }
+
+    @if (!loading && recipes.length === 0 && !error) {
+      <div class="empty-state">
+        <h2>No recipes yet</h2>
+        <p>Create your first recipe to get started.</p>
+        <a routerLink="/recipes/new" class="btn btn-primary">+ New Recipe</a>
+      </div>
+    }
+
+    @if (!loading && recipes.length > 0) {
+      <div class="recipe-grid">
+        @for (recipe of recipes; track recipe.id) {
+          <div class="recipe-card card">
+            <div class="recipe-card-body">
+              <h3 class="recipe-card-title">
+                <a [routerLink]="['/recipes', recipe.id]">{{ recipe.title }}</a>
+              </h3>
+              @if (recipe.description) {
+                <p class="recipe-card-description">{{ recipe.description }}</p>
+              } @else {
+                <p class="recipe-card-description muted">No description</p>
+              }
+              <p class="recipe-card-date">Updated {{ recipe.updatedAt | date:'mediumDate' }}</p>
+            </div>
+            <div class="recipe-card-actions">
+              <a [routerLink]="['/recipes', recipe.id, 'edit']" class="btn btn-secondary btn-sm">Edit</a>
+              <button class="btn btn-danger btn-sm" (click)="deleteRecipe(recipe)" [disabled]="deleting === recipe.id">
+                {{ deleting === recipe.id ? 'Deleting…' : 'Delete' }}
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
   `,
-  styles: [`
+    styles: [`
     .recipe-list-header {
       display: flex;
       align-items: center;
@@ -120,7 +136,7 @@ import { RecipeService } from '../../services/recipe.service';
     .muted {
       font-style: italic;
     }
-  `],
+  `]
 })
 export class RecipeListComponent implements OnInit {
   recipes: Recipe[] = [];

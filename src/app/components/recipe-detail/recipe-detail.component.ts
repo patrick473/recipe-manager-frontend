@@ -1,6 +1,6 @@
-import { Component, OnInit, SecurityContext } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, OnInit, SecurityContext } from '@angular/core';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
+import { DatePipe } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { marked } from 'marked';
 import { Recipe } from '../../models/recipe.model';
@@ -11,46 +11,60 @@ import { RecipeService } from '../../services/recipe.service';
  *   - title, optional description, and creation / update timestamps
  *   - Markdown content rendered to sanitised HTML
  *   - Edit and Delete action buttons
+ *
+ * Uses Angular 22 block control-flow syntax (@if / @else) and
+ * OnPush change detection.
  */
 @Component({
   selector: 'app-recipe-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [RouterLink, DatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div *ngIf="loading" class="loading-spinner"><p>Loading…</p></div>
+    @if (loading) {
+      <div class="loading-spinner"><p>Loading…</p></div>
+    }
 
-    <div *ngIf="error" class="alert alert-error">
-      {{ error }}
-      <br>
-      <a routerLink="/recipes">← Back to list</a>
-    </div>
+    @if (error) {
+      <div class="alert alert-error">
+        {{ error }}
+        <br>
+        <a routerLink="/recipes">← Back to list</a>
+      </div>
+    }
 
-    <div *ngIf="recipe && !loading">
-      <div class="detail-header">
-        <div class="breadcrumb">
-          <a routerLink="/recipes">Recipes</a>
-          <span> / </span>
-          <span>{{ recipe.title }}</span>
+    @if (recipe && !loading) {
+      <div>
+        <div class="detail-header">
+          <div class="breadcrumb">
+            <a routerLink="/recipes">Recipes</a>
+            <span> / </span>
+            <span>{{ recipe.title }}</span>
+          </div>
+          <div class="detail-actions">
+            <a [routerLink]="['/recipes', recipe.id, 'edit']" class="btn btn-secondary">Edit</a>
+            <button class="btn btn-danger" (click)="deleteRecipe()" [disabled]="deleting">
+              {{ deleting ? 'Deleting…' : 'Delete' }}
+            </button>
+          </div>
         </div>
-        <div class="detail-actions">
-          <a [routerLink]="['/recipes', recipe.id, 'edit']" class="btn btn-secondary">Edit</a>
-          <button class="btn btn-danger" (click)="deleteRecipe()" [disabled]="deleting">
-            {{ deleting ? 'Deleting…' : 'Delete' }}
-          </button>
+
+        <div class="card detail-card">
+          <h1 class="detail-title">{{ recipe.title }}</h1>
+          @if (recipe.description) {
+            <p class="detail-description">{{ recipe.description }}</p>
+          }
+          <div class="detail-meta">
+            <span>Created {{ recipe.createdAt | date:'medium' }}</span>
+            @if (recipe.updatedAt !== recipe.createdAt) {
+              <span> · Updated {{ recipe.updatedAt | date:'medium' }}</span>
+            }
+          </div>
+          <hr class="detail-divider">
+          <div class="markdown-body" [innerHTML]="renderedContent"></div>
         </div>
       </div>
-
-      <div class="card detail-card">
-        <h1 class="detail-title">{{ recipe.title }}</h1>
-        <p *ngIf="recipe.description" class="detail-description">{{ recipe.description }}</p>
-        <div class="detail-meta">
-          <span>Created {{ recipe.createdAt | date:'medium' }}</span>
-          <span *ngIf="recipe.updatedAt !== recipe.createdAt"> · Updated {{ recipe.updatedAt | date:'medium' }}</span>
-        </div>
-        <hr class="detail-divider">
-        <div class="markdown-body" [innerHTML]="renderedContent"></div>
-      </div>
-    </div>
+    }
   `,
   styles: [`
     .detail-header {
