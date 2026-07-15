@@ -1,0 +1,47 @@
+<div class="recipe-list-header">
+  <h2>Recipes</h2>
+</div>
+
+@if (error) {
+  <div class="alert alert-error">{{ error }}</div>
+}
+
+@if (loading) {
+  <div class="loading-spinner">
+    <p>Loading recipes…</p>
+  </div>
+}
+
+@if (!loading && recipes.length === 0 && !error) {
+  <div class="empty-state">
+    <h2>No recipes yet</h2>
+    <p>Create your first recipe to get started.</p>
+    <a routerLink="/recipes/new" class="btn btn-primary">+ New Recipe</a>
+  </div>
+}
+
+@if (!loading && recipes.length > 0) {
+  <div class="recipe-grid">
+    @for (recipe of recipes; track recipe.id) {
+      <div class="recipe-card card">
+        <div class="recipe-card-body">
+          <h3 class="recipe-card-title">
+            <a [routerLink]="['/recipes', recipe.id]">{{ recipe.title }}</a>
+          </h3>
+          @if (recipe.description) {
+            <p class="recipe-card-description">{{ recipe.description }}</p>
+          } @else {
+            <p class="recipe-card-description muted">No description</p>
+          }
+          <p class="recipe-card-date">Updated {{ recipe.updatedAt | date:'mediumDate' }}</p>
+        </div>
+        <div class="recipe-card-actions">
+          <a [routerLink]="['/recipes', recipe.id, 'edit']" class="btn btn-secondary btn-sm">Edit</a>
+          <button class="btn btn-danger btn-sm" (click)="deleteRecipe(recipe)" [disabled]="deleting === recipe.id">
+            {{ deleting === recipe.id ? 'Deleting…' : 'Delete' }}
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+}
