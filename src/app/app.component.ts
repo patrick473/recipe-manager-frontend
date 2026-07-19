@@ -5,18 +5,6 @@ import { RouterOutlet, RouterLink } from '@angular/router';
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet, RouterLink],
-  template: `
-    <div class="app-shell">
-      <header class="app-header">
-        <h1>🍳 Recipe Manager</h1>
-        <a routerLink="/recipes">Recipes</a>
-        <span class="spacer"></span>
-        <a routerLink="/recipes/new" class="btn btn-primary" style="padding: 5px 12px; font-size: 13px;">+ New Recipe</a>
-      </header>
-      <main class="main-content">
-        <router-outlet />
-      </main>
-    </div>
-  `,
+  templateUrl: './app.component.html',
 })
 export class AppComponent {}

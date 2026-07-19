@@ -1,6 +1,6 @@
-import { Component, OnInit, SecurityContext } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, OnInit, SecurityContext } from '@angular/core';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
+import { DatePipe } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { marked } from 'marked';
 import { Recipe } from '../../models/recipe.model';
@@ -11,105 +11,17 @@ import { RecipeService } from '../../services/recipe.service';
  *   - title, optional description, and creation / update timestamps
  *   - Markdown content rendered to sanitised HTML
  *   - Edit and Delete action buttons
+ *
+ * Uses Angular 22 block control-flow syntax (@if / @else) and
+ * OnPush change detection.
  */
 @Component({
   selector: 'app-recipe-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
-    <div *ngIf="loading" class="loading-spinner"><p>Loading…</p></div>
-
-    <div *ngIf="error" class="alert alert-error">
-      {{ error }}
-      <br>
-      <a routerLink="/recipes">← Back to list</a>
-    </div>
-
-    <div *ngIf="recipe && !loading">
-      <div class="detail-header">
-        <div class="breadcrumb">
-          <a routerLink="/recipes">Recipes</a>
-          <span> / </span>
-          <span>{{ recipe.title }}</span>
-        </div>
-        <div class="detail-actions">
-          <a [routerLink]="['/recipes', recipe.id, 'edit']" class="btn btn-secondary">Edit</a>
-          <button class="btn btn-danger" (click)="deleteRecipe()" [disabled]="deleting">
-            {{ deleting ? 'Deleting…' : 'Delete' }}
-          </button>
-        </div>
-      </div>
-
-      <div class="card detail-card">
-        <h1 class="detail-title">{{ recipe.title }}</h1>
-        <p *ngIf="recipe.description" class="detail-description">{{ recipe.description }}</p>
-        <div class="detail-meta">
-          <span>Created {{ recipe.createdAt | date:'medium' }}</span>
-          <span *ngIf="recipe.updatedAt !== recipe.createdAt"> · Updated {{ recipe.updatedAt | date:'medium' }}</span>
-        </div>
-        <hr class="detail-divider">
-        <div class="markdown-body" [innerHTML]="renderedContent"></div>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .detail-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .breadcrumb {
-      font-size: 14px;
-      color: var(--color-text-muted);
-    }
-
-    .breadcrumb a {
-      color: var(--color-primary);
-      text-decoration: none;
-    }
-
-    .breadcrumb a:hover {
-      text-decoration: underline;
-    }
-
-    .detail-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .detail-card {
-      padding: 28px 32px;
-    }
-
-    .detail-title {
-      font-size: 26px;
-      font-weight: 700;
-      margin-bottom: 8px;
-      line-height: 1.3;
-    }
-
-    .detail-description {
-      font-size: 16px;
-      color: var(--color-text-muted);
-      margin-bottom: 8px;
-    }
-
-    .detail-meta {
-      font-size: 12px;
-      color: var(--color-text-muted);
-      margin-bottom: 16px;
-    }
-
-    .detail-divider {
-      border: none;
-      border-top: 1px solid var(--color-border);
-      margin: 20px 0;
-    }
-  `],
+  imports: [RouterLink, DatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  templateUrl: './recipe-detail.component.html',
+  styleUrl: './recipe-detail.component.css',
 })
 export class RecipeDetailComponent implements OnInit {
   recipe: Recipe | null = null;
