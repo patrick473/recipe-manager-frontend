@@ -1,0 +1,79 @@
+.markdown-body {
+  line-height: 1.6;
+
+  > * + * {
+    margin-top: var(--space-4);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    margin-top: var(--space-6);
+    margin-bottom: var(--space-2);
+  }
+
+  h1:first-child, h2:first-child, h3:first-child {
+    margin-top: 0;
+  }
+
+  ul, ol {
+    padding-left: var(--space-5);
+  }
+
+  ul {
+    list-style: disc;
+  }
+
+  ol {
+    list-style: decimal;
+  }
+
+  li + li {
+    margin-top: var(--space-1);
+  }
+
+  code {
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+    background: var(--color-surface-hover);
+    border-radius: var(--radius-sm);
+    padding: 0.15em 0.4em;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background: var(--color-surface-hover);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-4);
+    overflow-x: auto;
+
+    code {
+      background: none;
+      padding: 0;
+    }
+  }
+
+  blockquote {
+    border-left: 3px solid var(--color-primary);
+    padding-left: var(--space-4);
+    color: var(--color-text-muted);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    border: 1px solid var(--color-border);
+    padding: var(--space-2) var(--space-3);
+    text-align: left;
+  }
+
+  img {
+    max-width: 100%;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--color-border);
+  }
+}

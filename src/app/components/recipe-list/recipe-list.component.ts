@@ -1,26 +1,28 @@
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
-import { TuiButton, TuiLoader, TuiNotification } from '@taiga-ui/core';
-import { TuiConfirmService } from '@taiga-ui/kit';
+import { ButtonDirective } from '../../shared/button.directive';
+import { IconComponent } from '../../shared/icon/icon.component';
+import { LoaderComponent } from '../../shared/loader/loader.component';
+import { ConfirmDialogService } from '../../shared/confirm-dialog/confirm-dialog.service';
 import { Recipe } from '../../models/recipe.model';
 import { RecipeService } from '../../services/recipe.service';
 
 /**
  * Displays a card grid of all recipes. Each card links to the detail view.
- * Provides per-card delete (via a Taiga UI confirm dialog) with optimistic
+ * Provides per-card delete (via a confirm dialog) with optimistic
  * removal from the list.
  *
  * Uses Angular 22 block control-flow (@if / @for / @empty).
  */
 @Component({
     selector: 'app-recipe-list',
-    imports: [RouterLink, DatePipe, TuiButton, TuiLoader, TuiNotification],
+    imports: [RouterLink, DatePipe, ButtonDirective, IconComponent, LoaderComponent],
     templateUrl: './recipe-list.component.html',
     styleUrl: './recipe-list.component.scss',
 })
 export class RecipeListComponent implements OnInit {
-  private readonly confirmService = inject(TuiConfirmService);
+  private readonly confirmService = inject(ConfirmDialogService);
 
   recipes: Recipe[] = [];
   loading = true;
@@ -56,15 +58,13 @@ export class RecipeListComponent implements OnInit {
 
   deleteRecipe(recipe: Recipe): void {
     this.confirmService
-      .withConfirm({
+      .confirm({
         label: `Delete "${recipe.title}"?`,
-        data: {
-          content: 'This cannot be undone.',
-          yes: 'Delete',
-          no: 'Cancel',
-        },
+        content: 'This cannot be undone.',
+        yes: 'Delete',
+        no: 'Cancel',
       })
-      .subscribe((confirmed) => {
+      .subscribe((confirmed: boolean) => {
         if (!confirmed) return;
 
         this.deleting = recipe.id;

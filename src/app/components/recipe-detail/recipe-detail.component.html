@@ -1,44 +1,42 @@
 @if (loading) {
-  <tui-loader [loading]="true" size="l" textContent="Loading…" class="loading-block" />
+  <app-loader size="l" text="Loading…" class="loading-block" />
 }
 
 @if (error) {
-  <div tuiNotification appearance="negative" class="mb">
+  <div class="notification notification-negative mb">
     {{ error }}
     <br>
-    <a routerLink="/recipes" tuiLink>← Back to list</a>
+    <a routerLink="/recipes">← Back to list</a>
   </div>
 }
 
 @if (recipe && !loading) {
   <div>
     <div class="detail-header">
-      <tui-breadcrumbs>
-        <ng-template tuiItem>
-          <a routerLink="/recipes" tuiLink>Recipes</a>
-        </ng-template>
-        <ng-template tuiItem>
-          <span>{{ recipe.title }}</span>
-        </ng-template>
-      </tui-breadcrumbs>
+      <nav class="breadcrumbs">
+        <a routerLink="/recipes">Recipes</a>
+        <span class="breadcrumb-sep">/</span>
+        <span>{{ recipe.title }}</span>
+      </nav>
       <div class="detail-actions">
-        <a [routerLink]="['/recipes', recipe.id, 'edit']" tuiButton appearance="secondary" iconStart="@tui.pencil">
+        <a [routerLink]="['/recipes', recipe.id, 'edit']" appButton appearance="secondary">
+          <app-icon name="pencil" [size]="16" />
           Edit
         </a>
         <button
-          tuiButton
+          appButton
           appearance="secondary-destructive"
           type="button"
-          iconStart="@tui.trash"
           (click)="deleteRecipe()"
           [disabled]="deleting"
         >
+          <app-icon name="trash" [size]="16" />
           {{ deleting ? 'Deleting…' : 'Delete' }}
         </button>
       </div>
     </div>
 
-    <div tuiCardLarge class="detail-card">
+    <div class="card-lg detail-card">
       <h1 class="detail-title">{{ recipe.title }}</h1>
       @if (recipe.description) {
         <p class="detail-description">{{ recipe.description }}</p>

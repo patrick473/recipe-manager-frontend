@@ -1,18 +1,13 @@
-import { Component, inject } from '@angular/core';
-import { RouterOutlet, RouterLink } from '@angular/router';
-import { TuiRoot, TuiButton, TuiIcon, TUI_DARK_MODE } from '@taiga-ui/core';
-import { TuiAppBar } from '@taiga-ui/layout';
+import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { NavBarComponent } from './components/nav-bar/nav-bar.component';
+import { ConfirmDialogComponent } from './shared/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, TuiRoot, TuiAppBar, TuiButton, TuiIcon],
+  imports: [RouterOutlet, NavBarComponent, ConfirmDialogComponent],
   templateUrl: './app.component.html',
+  styleUrl: './app.component.scss',
 })
-export class AppComponent {
-  protected readonly darkMode = inject(TUI_DARK_MODE);
-
-  protected toggleTheme(): void {
-    this.darkMode.set(!this.darkMode());
-  }
-}
+export class AppComponent {}

@@ -1,12 +1,12 @@
-import { ChangeDetectorRef, Component, OnInit, SecurityContext, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { marked } from 'marked';
-import { TuiButton, TuiLink, TuiLoader, TuiNotification } from '@taiga-ui/core';
-import { TuiBreadcrumbs, TuiConfirmService } from '@taiga-ui/kit';
-import { TuiItem } from '@taiga-ui/cdk';
-import { TuiCard } from '@taiga-ui/layout';
+import { ButtonDirective } from '../../shared/button.directive';
+import { IconComponent } from '../../shared/icon/icon.component';
+import { LoaderComponent } from '../../shared/loader/loader.component';
+import { ConfirmDialogService } from '../../shared/confirm-dialog/confirm-dialog.service';
 import { Recipe } from '../../models/recipe.model';
 import { RecipeService } from '../../services/recipe.service';
 
@@ -21,12 +21,12 @@ import { RecipeService } from '../../services/recipe.service';
 @Component({
   selector: 'app-recipe-detail',
   standalone: true,
-  imports: [RouterLink, DatePipe, TuiButton, TuiLink, TuiLoader, TuiNotification, TuiBreadcrumbs, TuiItem, TuiCard],
+  imports: [RouterLink, DatePipe, ButtonDirective, IconComponent, LoaderComponent],
   templateUrl: './recipe-detail.component.html',
   styleUrl: './recipe-detail.component.scss',
 })
 export class RecipeDetailComponent implements OnInit {
-  private readonly confirmService = inject(TuiConfirmService);
+  private readonly confirmService = inject(ConfirmDialogService);
 
   recipe: Recipe | null = null;
   renderedContent: SafeHtml = '';
@@ -68,15 +68,13 @@ export class RecipeDetailComponent implements OnInit {
     const recipe = this.recipe;
 
     this.confirmService
-      .withConfirm({
+      .confirm({
         label: `Delete "${recipe.title}"?`,
-        data: {
-          content: 'This cannot be undone.',
-          yes: 'Delete',
-          no: 'Cancel',
-        },
+        content: 'This cannot be undone.',
+        yes: 'Delete',
+        no: 'Cancel',
       })
-      .subscribe((confirmed) => {
+      .subscribe((confirmed: boolean) => {
         if (!confirmed) return;
 
         this.deleting = true;

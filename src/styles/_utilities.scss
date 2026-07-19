@@ -1,0 +1,185 @@
+// Spacing helper used alongside notification/loader blocks
+.mb {
+  margin-bottom: var(--space-4);
+}
+
+// ---- Cards ----
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4);
+}
+
+.card-lg {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-6);
+}
+
+// ---- Buttons (backs the appButton directive) ----
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  line-height: 1.2;
+  padding: var(--space-3) var(--space-4);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+
+  &:hover {
+    text-decoration: none;
+  }
+
+  &[disabled] {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+.btn-s {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+
+  &:hover {
+    background: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+  }
+}
+
+.btn-secondary {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text);
+
+  &:hover {
+    background: var(--color-surface-hover);
+  }
+}
+
+.btn-secondary-destructive {
+  background: var(--color-surface);
+  border-color: var(--color-danger-border);
+  color: var(--color-danger);
+
+  &:hover {
+    background: var(--color-danger-bg);
+  }
+}
+
+.btn-flat {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-text);
+
+  &:hover {
+    background: var(--color-surface-hover);
+  }
+}
+
+.btn-icon {
+  padding: var(--space-2);
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+
+// ---- Notifications ----
+.notification {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
+}
+
+.notification-negative {
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger-border);
+  color: var(--color-danger);
+}
+
+// ---- Breadcrumbs ----
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-4);
+
+  a {
+    color: var(--color-text-muted);
+
+    &:hover {
+      color: var(--color-primary);
+    }
+  }
+}
+
+.breadcrumb-sep {
+  color: var(--color-border);
+}
+
+// ---- Form fields ----
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+
+.field-label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.required-marker {
+  color: var(--color-danger);
+}
+
+.optional-label {
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+.field-input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
+  }
+}
+
+textarea.field-input {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.field-error {
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+}

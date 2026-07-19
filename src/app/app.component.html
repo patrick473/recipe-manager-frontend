@@ -1,27 +1,7 @@
-<tui-root>
-  <tui-app-bar class="app-bar">
-    <span tuiSlot="start" class="app-bar-title">
-      <tui-icon icon="@tui.chef-hat" />
-      Recipe Manager
-    </span>
-    <span tuiSlot="end" class="app-bar-actions">
-      <a routerLink="/recipes" tuiButton appearance="flat" size="s">Recipes</a>
-      <a routerLink="/recipes/new" tuiButton appearance="primary" size="s" iconStart="@tui.plus">
-        New Recipe
-      </a>
-      <button
-        tuiIconButton
-        appearance="flat"
-        size="s"
-        type="button"
-        [iconStart]="darkMode() ? '@tui.sun' : '@tui.moon'"
-        (click)="toggleTheme()"
-      >
-        Toggle theme
-      </button>
-    </span>
-  </tui-app-bar>
+<div class="app-shell">
+  <app-nav-bar />
   <main class="main-content">
     <router-outlet />
   </main>
-</tui-root>
+</div>
+<app-confirm-dialog />

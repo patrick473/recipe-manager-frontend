@@ -1,10 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { TuiButton, TuiError, TuiLink, TuiLoader, TuiNotification, TuiTextfield } from '@taiga-ui/core';
-import { TuiBreadcrumbs, TuiTextarea } from '@taiga-ui/kit';
-import { TuiItem } from '@taiga-ui/cdk';
-import { TuiCard } from '@taiga-ui/layout';
+import { ButtonDirective } from '../../shared/button.directive';
+import { LoaderComponent } from '../../shared/loader/loader.component';
 import { RecipeService } from '../../services/recipe.service';
 import { Recipe } from '../../models/recipe.model';
 
@@ -26,16 +24,8 @@ import { Recipe } from '../../models/recipe.model';
   imports: [
     ReactiveFormsModule,
     RouterLink,
-    TuiButton,
-    TuiError,
-    TuiLink,
-    TuiLoader,
-    TuiNotification,
-    TuiTextfield,
-    TuiBreadcrumbs,
-    TuiItem,
-    TuiTextarea,
-    TuiCard,
+    ButtonDirective,
+    LoaderComponent,
   ],
   templateUrl: './recipe-form.component.html',
   styleUrl: './recipe-form.component.scss',

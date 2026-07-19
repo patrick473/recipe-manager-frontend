@@ -1,0 +1,67 @@
+<nav class="side-nav" [class.expanded]="expanded()">
+  <div class="side-nav-brand">
+    <app-icon name="chef-hat" [size]="22" />
+    @if (expanded()) {
+      <span class="side-nav-title">Recipe Manager</span>
+    }
+  </div>
+
+  <button
+    appButton
+    appearance="flat"
+    size="s"
+    type="button"
+    class="side-nav-toggle"
+    [attr.aria-label]="expanded() ? 'Collapse navigation' : 'Expand navigation'"
+    (click)="toggleExpanded()"
+  >
+    <app-icon name="menu" [size]="18" />
+    @if (expanded()) {
+      <span>Collapse</span>
+    }
+  </button>
+
+  <div class="side-nav-links">
+    <a
+      routerLink="/recipes"
+      appButton
+      appearance="flat"
+      size="s"
+      class="side-nav-link"
+      [attr.title]="expanded() ? null : 'Recipes'"
+    >
+      <app-icon name="list" [size]="16" />
+      @if (expanded()) {
+        <span>Recipes</span>
+      }
+    </a>
+    <a
+      routerLink="/recipes/new"
+      appButton
+      appearance="primary"
+      size="s"
+      class="side-nav-link"
+      [attr.title]="expanded() ? null : 'New Recipe'"
+    >
+      <app-icon name="plus" [size]="16" />
+      @if (expanded()) {
+        <span>New Recipe</span>
+      }
+    </a>
+  </div>
+
+  <button
+    appButton
+    appearance="flat"
+    size="s"
+    type="button"
+    class="side-nav-theme-toggle"
+    [attr.aria-label]="theme.darkMode() ? 'Switch to light theme' : 'Switch to dark theme'"
+    (click)="toggleTheme()"
+  >
+    <app-icon [name]="theme.darkMode() ? 'sun' : 'moon'" [size]="16" />
+    @if (expanded()) {
+      <span>{{ theme.darkMode() ? 'Light mode' : 'Dark mode' }}</span>
+    }
+  </button>
+</nav>
