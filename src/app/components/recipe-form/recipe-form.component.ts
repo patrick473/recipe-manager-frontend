@@ -1,6 +1,10 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { TuiButton, TuiError, TuiLink, TuiLoader, TuiNotification, TuiTextfield } from '@taiga-ui/core';
+import { TuiBreadcrumbs, TuiTextarea } from '@taiga-ui/kit';
+import { TuiItem } from '@taiga-ui/cdk';
+import { TuiCard } from '@taiga-ui/layout';
 import { RecipeService } from '../../services/recipe.service';
 import { Recipe } from '../../models/recipe.model';
 
@@ -14,16 +18,27 @@ import { Recipe } from '../../models/recipe.model';
  *   - `title`   — required, max 255 chars
  *   - `content` — required
  *
- * Uses Angular 22 block control-flow syntax (@if / @else) and
- * OnPush change detection.
+ * Uses Angular 22 block control-flow syntax (@if / @else).
  */
 @Component({
   selector: 'app-recipe-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    TuiButton,
+    TuiError,
+    TuiLink,
+    TuiLoader,
+    TuiNotification,
+    TuiTextfield,
+    TuiBreadcrumbs,
+    TuiItem,
+    TuiTextarea,
+    TuiCard,
+  ],
   templateUrl: './recipe-form.component.html',
-  styleUrl: './recipe-form.component.css',
+  styleUrl: './recipe-form.component.scss',
 })
 export class RecipeFormComponent implements OnInit {
   form: FormGroup;

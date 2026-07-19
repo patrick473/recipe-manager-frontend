@@ -1,84 +1,89 @@
 <div class="form-page-header">
-  <div class="breadcrumb">
-    <a routerLink="/recipes">Recipes</a>
+  <tui-breadcrumbs>
+    <ng-template tuiItem>
+      <a routerLink="/recipes" tuiLink>Recipes</a>
+    </ng-template>
     @if (isEdit && recipe) {
-      <span> / </span>
-      <a [routerLink]="['/recipes', recipe.id]">{{ recipe.title }}</a>
+      <ng-template tuiItem>
+        <a [routerLink]="['/recipes', recipe.id]" tuiLink>{{ recipe.title }}</a>
+      </ng-template>
     }
-    <span> / </span>
-    <span>{{ isEdit ? 'Edit' : 'New Recipe' }}</span>
-  </div>
+    <ng-template tuiItem>
+      <span>{{ isEdit ? 'Edit' : 'New Recipe' }}</span>
+    </ng-template>
+  </tui-breadcrumbs>
 </div>
 
 @if (loadError) {
-  <div class="alert alert-error">{{ loadError }}</div>
+  <div tuiNotification appearance="negative" class="mb">{{ loadError }}</div>
 }
 
 @if (loading) {
-  <div class="loading-spinner"><p>Loading…</p></div>
+  <tui-loader [loading]="true" size="l" textContent="Loading…" class="loading-block" />
 }
 
 @if (!loading) {
-  <div class="card">
+  <div tuiCardLarge>
     <h2 class="form-title">{{ isEdit ? 'Edit Recipe' : 'New Recipe' }}</h2>
 
     @if (submitError) {
-      <div class="alert alert-error">{{ submitError }}</div>
+      <div tuiNotification appearance="negative" class="mb">{{ submitError }}</div>
     }
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
 
       <!-- Title -->
       <div class="form-group">
-        <label for="title">Title <span class="required-marker">*</span></label>
-        <input
-          id="title"
-          type="text"
-          formControlName="title"
-          placeholder="e.g. Classic Banana Bread"
-          [class.is-invalid]="isInvalid('title')"
-          autocomplete="off"
-        />
-        @if (isInvalid('title')) {
-          <span class="field-error">{{ titleError }}</span>
-        }
+        <tui-textfield>
+          <label tuiLabel for="title">Title <span class="required-marker">*</span></label>
+          <input
+            id="title"
+            tuiTextfield
+            formControlName="title"
+            placeholder="e.g. Classic Banana Bread"
+            autocomplete="off"
+          />
+        </tui-textfield>
+        <tui-error [error]="isInvalid('title') ? titleError : null" />
       </div>
 
       <!-- Description -->
       <div class="form-group">
-        <label for="description">Description <span class="optional-label">(optional)</span></label>
-        <input
-          id="description"
-          type="text"
-          formControlName="description"
-          placeholder="One-line summary shown in the recipe list"
-          autocomplete="off"
-        />
+        <tui-textfield>
+          <label tuiLabel for="description">Description <span class="optional-label">(optional)</span></label>
+          <input
+            id="description"
+            tuiTextfield
+            formControlName="description"
+            placeholder="One-line summary shown in the recipe list"
+            autocomplete="off"
+          />
+        </tui-textfield>
       </div>
 
       <!-- Content (Markdown) -->
       <div class="form-group">
-        <label for="content">Content (Markdown) <span class="required-marker">*</span></label>
-        <textarea
-          id="content"
-          formControlName="content"
-          rows="16"
-          placeholder="## Ingredients&#10;- ...&#10;&#10;## Steps&#10;1. ..."
-          [class.is-invalid]="isInvalid('content')"
-        ></textarea>
-        @if (isInvalid('content')) {
-          <span class="field-error">Content is required.</span>
-        }
+        <tui-textfield>
+          <label tuiLabel for="content">Content (Markdown) <span class="required-marker">*</span></label>
+          <textarea
+            id="content"
+            tuiTextarea
+            formControlName="content"
+            rows="16"
+            placeholder="## Ingredients&#10;- ...&#10;&#10;## Steps&#10;1. ..."
+          ></textarea>
+        </tui-textfield>
+        <tui-error [error]="isInvalid('content') ? 'Content is required.' : null" />
       </div>
 
       <div class="form-actions">
-        <button type="submit" class="btn btn-primary" [disabled]="submitting">
+        <button tuiButton appearance="primary" type="submit" [disabled]="submitting">
           {{ submitting ? 'Saving…' : (isEdit ? 'Save Changes' : 'Create Recipe') }}
         </button>
         @if (isEdit && recipe) {
-          <a [routerLink]="['/recipes', recipe.id]" class="btn btn-secondary">Cancel</a>
+          <a [routerLink]="['/recipes', recipe.id]" tuiButton appearance="secondary">Cancel</a>
         } @else {
-          <a routerLink="/recipes" class="btn btn-secondary">Cancel</a>
+          <a routerLink="/recipes" tuiButton appearance="secondary">Cancel</a>
         }
       </div>
     </form>

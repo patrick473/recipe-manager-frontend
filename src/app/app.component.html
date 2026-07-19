@@ -1,11 +1,27 @@
-<div class="app-shell">
-  <header class="app-header">
-    <h1>🍳 Recipe Manager</h1>
-    <a routerLink="/recipes">Recipes</a>
-    <span class="spacer"></span>
-    <a routerLink="/recipes/new" class="btn btn-primary" style="padding: 5px 12px; font-size: 13px;">+ New Recipe</a>
-  </header>
+<tui-root>
+  <tui-app-bar class="app-bar">
+    <span tuiSlot="start" class="app-bar-title">
+      <tui-icon icon="@tui.chef-hat" />
+      Recipe Manager
+    </span>
+    <span tuiSlot="end" class="app-bar-actions">
+      <a routerLink="/recipes" tuiButton appearance="flat" size="s">Recipes</a>
+      <a routerLink="/recipes/new" tuiButton appearance="primary" size="s" iconStart="@tui.plus">
+        New Recipe
+      </a>
+      <button
+        tuiIconButton
+        appearance="flat"
+        size="s"
+        type="button"
+        [iconStart]="darkMode() ? '@tui.sun' : '@tui.moon'"
+        (click)="toggleTheme()"
+      >
+        Toggle theme
+      </button>
+    </span>
+  </tui-app-bar>
   <main class="main-content">
     <router-outlet />
   </main>
-</div>
+</tui-root>

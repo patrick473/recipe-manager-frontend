@@ -3,27 +3,25 @@
 </div>
 
 @if (error) {
-  <div class="alert alert-error">{{ error }}</div>
+  <div tuiNotification appearance="negative" class="mb">{{ error }}</div>
 }
 
 @if (loading) {
-  <div class="loading-spinner">
-    <p>Loading recipes…</p>
-  </div>
+  <tui-loader [loading]="true" size="l" textContent="Loading recipes…" class="loading-block" />
 }
 
 @if (!loading && recipes.length === 0 && !error) {
   <div class="empty-state">
     <h2>No recipes yet</h2>
     <p>Create your first recipe to get started.</p>
-    <a routerLink="/recipes/new" class="btn btn-primary">+ New Recipe</a>
+    <a routerLink="/recipes/new" tuiButton appearance="primary" iconStart="@tui.plus">New Recipe</a>
   </div>
 }
 
 @if (!loading && recipes.length > 0) {
   <div class="recipe-grid">
     @for (recipe of recipes; track recipe.id) {
-      <div class="recipe-card card">
+      <div tuiCardMedium class="recipe-card">
         <div class="recipe-card-body">
           <h3 class="recipe-card-title">
             <a [routerLink]="['/recipes', recipe.id]">{{ recipe.title }}</a>
@@ -36,8 +34,18 @@
           <p class="recipe-card-date">Updated {{ recipe.updatedAt | date:'mediumDate' }}</p>
         </div>
         <div class="recipe-card-actions">
-          <a [routerLink]="['/recipes', recipe.id, 'edit']" class="btn btn-secondary btn-sm">Edit</a>
-          <button class="btn btn-danger btn-sm" (click)="deleteRecipe(recipe)" [disabled]="deleting === recipe.id">
+          <a [routerLink]="['/recipes', recipe.id, 'edit']" tuiButton appearance="secondary" size="s" iconStart="@tui.pencil">
+            Edit
+          </a>
+          <button
+            tuiButton
+            appearance="secondary-destructive"
+            size="s"
+            type="button"
+            iconStart="@tui.trash"
+            (click)="deleteRecipe(recipe)"
+            [disabled]="deleting === recipe.id"
+          >
             {{ deleting === recipe.id ? 'Deleting…' : 'Delete' }}
           </button>
         </div>
