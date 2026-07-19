@@ -41,7 +41,7 @@ import { ConfirmDialogService } from './confirm-dialog.service';
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-md);
       padding: var(--space-5);
-      max-width: 420px;
+      max-width: 26.25rem;
       width: 100%;
     }
 

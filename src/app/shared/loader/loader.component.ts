@@ -24,8 +24,8 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
     }
 
     .loader-spinner {
-      width: 20px;
-      height: 20px;
+      width: 1.25rem;
+      height: 1.25rem;
       border-radius: 50%;
       border: 2px solid var(--color-border);
       border-top-color: var(--color-primary);
@@ -33,8 +33,8 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
     }
 
     .loader-l .loader-spinner {
-      width: 32px;
-      height: 32px;
+      width: 2rem;
+      height: 2rem;
       border-width: 3px;
     }
 

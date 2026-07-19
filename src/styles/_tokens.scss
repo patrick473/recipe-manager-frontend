@@ -1,18 +1,18 @@
 :root {
   // Brand
-  --color-primary: #d9622b;
-  --color-primary-hover: #c14f1c;
+  --color-primary: #4a8f3c;
+  --color-primary-hover: #3d7830;
   --color-primary-contrast: #ffffff;
 
   // Surfaces
-  --color-bg: #faf7f2;
+  --color-bg: #f6f9f1;
   --color-surface: #ffffff;
-  --color-surface-hover: #f3efe8;
-  --color-border: #e4ddd0;
+  --color-surface-hover: #edf4e6;
+  --color-border: #dbe6d0;
 
   // Text
-  --color-text: #241c14;
-  --color-text-muted: #776f61;
+  --color-text: #1e2a17;
+  --color-text-muted: #66755c;
   --color-text-on-primary: #ffffff;
 
   // Feedback
@@ -26,19 +26,19 @@
   --shadow-md: 0 4px 16px rgba(36, 28, 20, 0.1);
 
   // Shape
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
 
   // Spacing scale
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --space-7: 48px;
-  --space-8: 64px;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
 
   // Typography
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -54,18 +54,18 @@
 }
 
 :root[data-theme="dark"] {
-  --color-primary: #e8804a;
-  --color-primary-hover: #f0955f;
-  --color-primary-contrast: #1a1410;
+  --color-primary: #7cc266;
+  --color-primary-hover: #8ed17a;
+  --color-primary-contrast: #12200d;
 
-  --color-bg: #17130f;
-  --color-surface: #221c15;
-  --color-surface-hover: #2c2419;
-  --color-border: #3a3025;
+  --color-bg: #10150c;
+  --color-surface: #1a2115;
+  --color-surface-hover: #232c1c;
+  --color-border: #333f28;
 
-  --color-text: #f2ece2;
-  --color-text-muted: #a89c8a;
-  --color-text-on-primary: #1a1410;
+  --color-text: #eef2e6;
+  --color-text-muted: #a7b39c;
+  --color-text-on-primary: #12200d;
 
   --color-danger: #f2867d;
   --color-danger-hover: #f6a49d;
