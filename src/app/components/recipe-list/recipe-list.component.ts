@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { Recipe } from '../../models/recipe.model';
@@ -24,7 +24,10 @@ export class RecipeListComponent implements OnInit {
   error: string | null = null;
   deleting: number | null = null;
 
-  constructor(private recipeService: RecipeService) {}
+  constructor(
+    private recipeService: RecipeService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.loadRecipes();
@@ -37,11 +40,13 @@ export class RecipeListComponent implements OnInit {
       next: (data) => {
         this.recipes = data;
         this.loading = false;
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.error = 'Failed to load recipes. Is the backend running?';
         this.loading = false;
         console.error(err);
+        this.cdr.markForCheck();
       },
     });
   }
@@ -55,11 +60,13 @@ export class RecipeListComponent implements OnInit {
       next: () => {
         this.recipes = this.recipes.filter((r) => r.id !== recipe.id);
         this.deleting = null;
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.error = `Failed to delete "${recipe.title}".`;
         this.deleting = null;
         console.error(err);
+        this.cdr.markForCheck();
       },
     });
   }
