@@ -12,7 +12,10 @@
     "api:generate": "orval --config orval.config.ts",
     "lint": "ng lint",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:report": "playwright show-report"
   },
   "private": true,
   "dependencies": {
@@ -35,6 +38,8 @@
     "@angular/cli": "^22.0.7",
     "@angular/compiler-cli": "^22.0.6",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.62.0",
+    "@types/node": "^26.1.1",
     "angular-eslint": "22.1.0",
     "eslint": "^10.6.0",
     "jsdom": "^26.0.0",
