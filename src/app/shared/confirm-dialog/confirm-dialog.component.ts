@@ -8,13 +8,19 @@ import { ConfirmDialogService } from './confirm-dialog.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (service.request(); as req) {
-      <div class="backdrop" (click)="respond(false)">
+      <div
+        class="backdrop"
+        tabindex="-1"
+        (click)="respond(false)"
+        (keydown.escape)="respond(false)"
+      >
         <div
           class="dialog"
           role="alertdialog"
           aria-modal="true"
           [attr.aria-label]="req.label"
           (click)="$event.stopPropagation()"
+          (keydown)="$event.stopPropagation()"
         >
           <h2 class="dialog-label">{{ req.label }}</h2>
           @if (req.content) {
