@@ -4,20 +4,34 @@ import { ConfirmDialogService } from './confirm-dialog.service';
 
 @Component({
   selector: 'app-confirm-dialog',
-  standalone: true,
   imports: [ButtonDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (service.request(); as req) {
       <div class="backdrop" (click)="respond(false)">
-        <div class="dialog" role="alertdialog" aria-modal="true" [attr.aria-label]="req.label" (click)="$event.stopPropagation()">
+        <div
+          class="dialog"
+          role="alertdialog"
+          aria-modal="true"
+          [attr.aria-label]="req.label"
+          (click)="$event.stopPropagation()"
+        >
           <h2 class="dialog-label">{{ req.label }}</h2>
           @if (req.content) {
             <p class="dialog-content">{{ req.content }}</p>
           }
           <div class="dialog-actions">
-            <button appButton appearance="secondary" type="button" (click)="respond(false)">{{ req.no }}</button>
-            <button appButton appearance="secondary-destructive" type="button" (click)="respond(true)">{{ req.yes }}</button>
+            <button appButton appearance="secondary" type="button" (click)="respond(false)">
+              {{ req.no }}
+            </button>
+            <button
+              appButton
+              appearance="secondary-destructive"
+              type="button"
+              (click)="respond(true)"
+            >
+              {{ req.yes }}
+            </button>
           </div>
         </div>
       </div>

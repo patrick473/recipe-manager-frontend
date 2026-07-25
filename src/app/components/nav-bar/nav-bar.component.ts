@@ -1,8 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ThemeService } from '../../services/theme.service';
 import { ButtonDirective } from '../../shared/button.directive';
 import { IconComponent } from '../../shared/icon/icon.component';
-import { ThemeService } from '../../services/theme.service';
 
 @Component({
   selector: 'app-nav-bar',

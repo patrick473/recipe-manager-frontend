@@ -1,8 +1,9 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { Observable, of } from 'rxjs';
+import { map, switchMap, tap } from 'rxjs/operators';
 import { RecipesService } from '../api/generated/recipes/recipes.service';
 import { Recipe, RecipeRequest } from '../models/recipe.model';
+import { ConfirmDialogService } from '../shared/confirm-dialog/confirm-dialog.service';
 
 /**
  * Service that wraps the Orval-generated Recipe Manager API client.
@@ -18,6 +19,7 @@ import { Recipe, RecipeRequest } from '../models/recipe.model';
 @Injectable({ providedIn: 'root' })
 export class RecipeService {
   private readonly api = inject(RecipesService);
+  private readonly confirmService = inject(ConfirmDialogService);
 
   /** Reactive count of loaded recipes — updated after each getAll() call. */
   readonly recipeCount = signal<number>(0);
@@ -38,7 +40,7 @@ export class RecipeService {
           this.loading.set(false);
         },
         error: () => this.loading.set(false),
-      })
+      }),
     );
   }
 
@@ -49,9 +51,7 @@ export class RecipeService {
 
   /** POST /recipes — create a new recipe */
   create(request: RecipeRequest): Observable<Recipe> {
-    return this.api.createRecipe(request).pipe(
-      tap(() => this.recipeCount.update((n) => n + 1))
-    );
+    return this.api.createRecipe(request).pipe(tap(() => this.recipeCount.update((n) => n + 1)));
   }
 
   /** PUT /recipes/{id} — update an existing recipe */
@@ -61,8 +61,34 @@ export class RecipeService {
 
   /** DELETE /recipes/{id} — delete a recipe */
   delete(id: number): Observable<void> {
-    return this.api.deleteRecipe(id).pipe(
-      tap(() => this.recipeCount.update((n) => Math.max(0, n - 1)))
-    );
+    return this.api
+      .deleteRecipe(id)
+      .pipe(tap(() => this.recipeCount.update((n) => Math.max(0, n - 1))));
+  }
+
+  /**
+   * Shows a confirm dialog for deleting `recipe` and, if confirmed, performs
+   * the delete. Invokes `onConfirmed` synchronously right after the user
+   * confirms (before the HTTP call resolves) so callers can update local
+   * "deleting" state at the same point in time as before this was extracted.
+   *
+   * Emits `false` if the user cancels (no HTTP call is made), or `true` once
+   * the delete request completes successfully.
+   */
+  deleteWithConfirm(recipe: Recipe, onConfirmed?: () => void): Observable<boolean> {
+    return this.confirmService
+      .confirm({
+        label: `Delete "${recipe.title}"?`,
+        content: 'This cannot be undone.',
+        yes: 'Delete',
+        no: 'Cancel',
+      })
+      .pipe(
+        switchMap((confirmed) => {
+          if (!confirmed) return of(false);
+          onConfirmed?.();
+          return this.delete(recipe.id).pipe(map(() => true));
+        }),
+      );
   }
 }

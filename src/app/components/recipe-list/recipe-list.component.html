@@ -2,15 +2,15 @@
   <h2>Recipes</h2>
 </div>
 
-@if (error) {
-  <div class="notification notification-negative mb">{{ error }}</div>
+@if (error()) {
+  <div class="notification notification-negative mb">{{ error() }}</div>
 }
 
-@if (loading) {
+@if (loading()) {
   <app-loader size="l" text="Loading recipes…" class="loading-block" />
 }
 
-@if (!loading && recipes.length === 0 && !error) {
+@if (!loading() && recipes().length === 0 && !error()) {
   <div class="empty-state">
     <h2>No recipes yet</h2>
     <p>Create your first recipe to get started.</p>
@@ -21,9 +21,9 @@
   </div>
 }
 
-@if (!loading && recipes.length > 0) {
+@if (!loading() && recipes().length > 0) {
   <div class="recipe-grid">
-    @for (recipe of recipes; track recipe.id) {
+    @for (recipe of recipes(); track recipe.id) {
       <div class="card recipe-card">
         <div class="recipe-card-body">
           <h3 class="recipe-card-title">
@@ -34,10 +34,15 @@
           } @else {
             <p class="recipe-card-description muted">No description</p>
           }
-          <p class="recipe-card-date">Updated {{ recipe.updatedAt | date:'mediumDate' }}</p>
+          <p class="recipe-card-date">Updated {{ recipe.updatedAt | date: 'mediumDate' }}</p>
         </div>
         <div class="recipe-card-actions">
-          <a [routerLink]="['/recipes', recipe.id, 'edit']" appButton appearance="secondary" size="s">
+          <a
+            [routerLink]="['/recipes', recipe.id, 'edit']"
+            appButton
+            appearance="secondary"
+            size="s"
+          >
             <app-icon name="pencil" [size]="14" />
             Edit
           </a>
@@ -47,10 +52,10 @@
             size="s"
             type="button"
             (click)="deleteRecipe(recipe)"
-            [disabled]="deleting === recipe.id"
+            [disabled]="deleting() === recipe.id"
           >
             <app-icon name="trash" [size]="14" />
-            {{ deleting === recipe.id ? 'Deleting…' : 'Delete' }}
+            {{ deleting() === recipe.id ? 'Deleting…' : 'Delete' }}
           </button>
         </div>
       </div>

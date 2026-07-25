@@ -9,7 +9,6 @@ export type ButtonSize = 's' | 'm';
  */
 @Directive({
   selector: '[appButton]',
-  standalone: true,
 })
 export class ButtonDirective {
   readonly appearance = input<ButtonAppearance>('secondary');

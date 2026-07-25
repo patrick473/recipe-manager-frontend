@@ -9,7 +9,10 @@
     "build:prod": "ng build --configuration production",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "api:generate": "orval --config orval.config.ts"
+    "api:generate": "orval --config orval.config.ts",
+    "lint": "ng lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "private": true,
   "dependencies": {
@@ -31,9 +34,15 @@
     "@angular/build": "^22.0.7",
     "@angular/cli": "^22.0.7",
     "@angular/compiler-cli": "^22.0.6",
+    "@eslint/js": "^10.0.1",
+    "angular-eslint": "22.1.0",
+    "eslint": "^10.6.0",
     "jsdom": "^26.0.0",
     "orval": "^8.22.0",
+    "prettier": "^3.9.6",
+    "prettier-plugin-organize-imports": "^4.3.0",
     "typescript": "~6.0.3",
+    "typescript-eslint": "8.62.1",
     "vitest": "^4.0.8"
   }
 }

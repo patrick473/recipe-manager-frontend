@@ -65,13 +65,13 @@ src/
 
 ## Views and routing
 
-| URL | Component | Description |
-|-----|-----------|-------------|
-| `/` | redirect | Redirects to `/recipes` |
-| `/recipes` | RecipeListComponent | Card grid of all recipes |
-| `/recipes/new` | RecipeFormComponent | Blank create form |
-| `/recipes/:id` | RecipeDetailComponent | Recipe with Markdown preview |
-| `/recipes/:id/edit` | RecipeFormComponent | Pre-filled edit form |
+| URL                 | Component             | Description                  |
+| ------------------- | --------------------- | ---------------------------- |
+| `/`                 | redirect              | Redirects to `/recipes`      |
+| `/recipes`          | RecipeListComponent   | Card grid of all recipes     |
+| `/recipes/new`      | RecipeFormComponent   | Blank create form            |
+| `/recipes/:id`      | RecipeDetailComponent | Recipe with Markdown preview |
+| `/recipes/:id/edit` | RecipeFormComponent   | Pre-filled edit form         |
 
 ---
 
@@ -79,13 +79,13 @@ src/
 
 `RecipeService` (`src/app/services/recipe.service.ts`) wraps the backend REST API.
 
-| Method | Signature | Maps to |
-|--------|-----------|---------|
-| `getAll()` | `(): Observable<Recipe[]>` | `GET /recipes` |
-| `getById(id)` | `(id: number): Observable<Recipe>` | `GET /recipes/{id}` |
-| `create(request)` | `(r: RecipeRequest): Observable<Recipe>` | `POST /recipes` |
-| `update(id, request)` | `(id, r: RecipeRequest): Observable<Recipe>` | `PUT /recipes/{id}` |
-| `delete(id)` | `(id: number): Observable<void>` | `DELETE /recipes/{id}` |
+| Method                | Signature                                    | Maps to                |
+| --------------------- | -------------------------------------------- | ---------------------- |
+| `getAll()`            | `(): Observable<Recipe[]>`                   | `GET /recipes`         |
+| `getById(id)`         | `(id: number): Observable<Recipe>`           | `GET /recipes/{id}`    |
+| `create(request)`     | `(r: RecipeRequest): Observable<Recipe>`     | `POST /recipes`        |
+| `update(id, request)` | `(id, r: RecipeRequest): Observable<Recipe>` | `PUT /recipes/{id}`    |
+| `delete(id)`          | `(id: number): Observable<void>`             | `DELETE /recipes/{id}` |
 
 Inject the service with standard Angular DI:
 
@@ -104,9 +104,9 @@ export interface Recipe {
   id: number;
   title: string;
   description: string | null;
-  content: string;       // Markdown body
-  createdAt: string;     // ISO-8601 UTC
-  updatedAt: string;     // ISO-8601 UTC
+  content: string; // Markdown body
+  createdAt: string; // ISO-8601 UTC
+  updatedAt: string; // ISO-8601 UTC
 }
 
 export interface RecipeRequest {
@@ -122,11 +122,11 @@ export interface RecipeRequest {
 
 `RecipeFormComponent` uses Angular Reactive Forms with the following rules:
 
-| Field | Rule | Error message |
-|-------|------|---------------|
-| `title` | Required | "Title is required." |
-| `title` | Max 255 chars | "Title must not exceed 255 characters." |
-| `content` | Required | "Content is required." |
+| Field     | Rule          | Error message                           |
+| --------- | ------------- | --------------------------------------- |
+| `title`   | Required      | "Title is required."                    |
+| `title`   | Max 255 chars | "Title must not exceed 255 characters." |
+| `content` | Required      | "Content is required."                  |
 
 Validation errors appear below the field only after the user has touched it or attempted to submit. Submitting an invalid form marks all controls as touched and aborts the HTTP call.
 

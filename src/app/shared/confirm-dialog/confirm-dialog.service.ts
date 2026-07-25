@@ -8,7 +8,7 @@ export interface ConfirmOptions {
   no?: string;
 }
 
-export interface ConfirmRequest extends Required<ConfirmOptions> {}
+export type ConfirmRequest = Required<ConfirmOptions>;
 
 @Injectable({ providedIn: 'root' })
 export class ConfirmDialogService {

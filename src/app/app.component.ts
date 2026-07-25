@@ -5,7 +5,6 @@ import { ConfirmDialogComponent } from './shared/confirm-dialog/confirm-dialog.c
 
 @Component({
   selector: 'app-root',
-  standalone: true,
   imports: [RouterOutlet, NavBarComponent, ConfirmDialogComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',

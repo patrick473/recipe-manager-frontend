@@ -1,54 +1,56 @@
-@if (loading) {
+@if (loading()) {
   <app-loader size="l" text="Loading…" class="loading-block" />
 }
 
-@if (error) {
+@if (error()) {
   <div class="notification notification-negative mb">
-    {{ error }}
-    <br>
+    {{ error() }}
+    <br />
     <a routerLink="/recipes">← Back to list</a>
   </div>
 }
 
-@if (recipe && !loading) {
-  <div>
-    <div class="detail-header">
-      <nav class="breadcrumbs">
-        <a routerLink="/recipes">Recipes</a>
-        <span class="breadcrumb-sep">/</span>
-        <span>{{ recipe.title }}</span>
-      </nav>
-      <div class="detail-actions">
-        <a [routerLink]="['/recipes', recipe.id, 'edit']" appButton appearance="secondary">
-          <app-icon name="pencil" [size]="16" />
-          Edit
-        </a>
-        <button
-          appButton
-          appearance="secondary-destructive"
-          type="button"
-          (click)="deleteRecipe()"
-          [disabled]="deleting"
-        >
-          <app-icon name="trash" [size]="16" />
-          {{ deleting ? 'Deleting…' : 'Delete' }}
-        </button>
+@if (recipe(); as r) {
+  @if (!loading()) {
+    <div>
+      <div class="detail-header">
+        <nav class="breadcrumbs">
+          <a routerLink="/recipes">Recipes</a>
+          <span class="breadcrumb-sep">/</span>
+          <span>{{ r.title }}</span>
+        </nav>
+        <div class="detail-actions">
+          <a [routerLink]="['/recipes', r.id, 'edit']" appButton appearance="secondary">
+            <app-icon name="pencil" [size]="16" />
+            Edit
+          </a>
+          <button
+            appButton
+            appearance="secondary-destructive"
+            type="button"
+            (click)="deleteRecipe()"
+            [disabled]="deleting()"
+          >
+            <app-icon name="trash" [size]="16" />
+            {{ deleting() ? 'Deleting…' : 'Delete' }}
+          </button>
+        </div>
       </div>
-    </div>
 
-    <div class="card-lg detail-card">
-      <h1 class="detail-title">{{ recipe.title }}</h1>
-      @if (recipe.description) {
-        <p class="detail-description">{{ recipe.description }}</p>
-      }
-      <div class="detail-meta">
-        <span>Created {{ recipe.createdAt | date:'medium' }}</span>
-        @if (recipe.updatedAt !== recipe.createdAt) {
-          <span> · Updated {{ recipe.updatedAt | date:'medium' }}</span>
+      <div class="card-lg detail-card">
+        <h1 class="detail-title">{{ r.title }}</h1>
+        @if (r.description) {
+          <p class="detail-description">{{ r.description }}</p>
         }
+        <div class="detail-meta">
+          <span>Created {{ r.createdAt | date: 'medium' }}</span>
+          @if (r.updatedAt !== r.createdAt) {
+            <span> · Updated {{ r.updatedAt | date: 'medium' }}</span>
+          }
+        </div>
+        <hr class="detail-divider" />
+        <div class="markdown-body" [innerHTML]="renderedContent()"></div>
       </div>
-      <hr class="detail-divider">
-      <div class="markdown-body" [innerHTML]="renderedContent"></div>
     </div>
-  </div>
+  }
 }

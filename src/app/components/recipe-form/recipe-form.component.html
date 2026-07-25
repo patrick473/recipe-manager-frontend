@@ -1,33 +1,32 @@
 <div class="form-page-header">
   <nav class="breadcrumbs">
     <a routerLink="/recipes">Recipes</a>
-    @if (isEdit && recipe) {
+    @if (isEdit() && recipe()) {
       <span class="breadcrumb-sep">/</span>
-      <a [routerLink]="['/recipes', recipe.id]">{{ recipe.title }}</a>
+      <a [routerLink]="['/recipes', recipe()!.id]">{{ recipe()!.title }}</a>
     }
     <span class="breadcrumb-sep">/</span>
-    <span>{{ isEdit ? 'Edit' : 'New Recipe' }}</span>
+    <span>{{ isEdit() ? 'Edit' : 'New Recipe' }}</span>
   </nav>
 </div>
 
-@if (loadError) {
-  <div class="notification notification-negative mb">{{ loadError }}</div>
+@if (loadError()) {
+  <div class="notification notification-negative mb">{{ loadError() }}</div>
 }
 
-@if (loading) {
+@if (loading()) {
   <app-loader size="l" text="Loading…" class="loading-block" />
 }
 
-@if (!loading) {
+@if (!loading()) {
   <div class="card-lg">
-    <h2 class="form-title">{{ isEdit ? 'Edit Recipe' : 'New Recipe' }}</h2>
+    <h2 class="form-title">{{ isEdit() ? 'Edit Recipe' : 'New Recipe' }}</h2>
 
-    @if (submitError) {
-      <div class="notification notification-negative mb">{{ submitError }}</div>
+    @if (submitError()) {
+      <div class="notification notification-negative mb">{{ submitError() }}</div>
     }
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-
       <!-- Title -->
       <div class="field">
         <label class="field-label" for="title">Title <span class="required-marker">*</span></label>
@@ -45,7 +44,9 @@
 
       <!-- Description -->
       <div class="field">
-        <label class="field-label" for="description">Description <span class="optional-label">(optional)</span></label>
+        <label class="field-label" for="description"
+          >Description <span class="optional-label">(optional)</span></label
+        >
         <input
           id="description"
           class="field-input"
@@ -57,7 +58,9 @@
 
       <!-- Content (Markdown) -->
       <div class="field">
-        <label class="field-label" for="content">Content (Markdown) <span class="required-marker">*</span></label>
+        <label class="field-label" for="content"
+          >Content (Markdown) <span class="required-marker">*</span></label
+        >
         <textarea
           id="content"
           class="field-input"
@@ -71,11 +74,11 @@
       </div>
 
       <div class="form-actions">
-        <button appButton appearance="primary" type="submit" [disabled]="submitting">
-          {{ submitting ? 'Saving…' : (isEdit ? 'Save Changes' : 'Create Recipe') }}
+        <button appButton appearance="primary" type="submit" [disabled]="submitting()">
+          {{ submitting() ? 'Saving…' : isEdit() ? 'Save Changes' : 'Create Recipe' }}
         </button>
-        @if (isEdit && recipe) {
-          <a [routerLink]="['/recipes', recipe.id]" appButton appearance="secondary">Cancel</a>
+        @if (isEdit() && recipe()) {
+          <a [routerLink]="['/recipes', recipe()!.id]" appButton appearance="secondary">Cancel</a>
         } @else {
           <a routerLink="/recipes" appButton appearance="secondary">Cancel</a>
         }

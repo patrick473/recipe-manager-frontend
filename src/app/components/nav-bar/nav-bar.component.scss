@@ -64,8 +64,8 @@
   justify-content: flex-start;
   white-space: nowrap;
   overflow: hidden;
-  text-align:left;
-  padding-left: .55rem;
+  text-align: left;
+  padding-left: 0.55rem;
 }
 
 // Fixed-size slot so the icon centers in the collapsed rail and stays put
@@ -77,10 +77,10 @@
   justify-content: center;
 
   &.side-nav-icon--brand {
-      padding-left: .20rem;
+    padding-left: 0.2rem;
   }
 }
 
 .side-nav-text {
-    height: 1.125rem;
+  height: 1.125rem;
 }

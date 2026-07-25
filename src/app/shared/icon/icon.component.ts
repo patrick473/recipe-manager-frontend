@@ -1,13 +1,12 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-icon',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './icon.component.html',
   styleUrl: './icon.component.scss',
 })
 export class IconComponent {
-  @Input() name!: string;
-  @Input() size: number = 18;
+  readonly name = input.required<string>();
+  readonly size = input(18);
 }

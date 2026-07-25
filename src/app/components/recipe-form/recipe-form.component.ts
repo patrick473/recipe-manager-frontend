@@ -1,10 +1,24 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  OnInit,
+  inject,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Recipe } from '../../models/recipe.model';
+import { RecipeService } from '../../services/recipe.service';
 import { ButtonDirective } from '../../shared/button.directive';
 import { LoaderComponent } from '../../shared/loader/loader.component';
-import { RecipeService } from '../../services/recipe.service';
-import { Recipe } from '../../models/recipe.model';
 
 /**
  * Shared create/edit form for recipes.
@@ -20,83 +34,81 @@ import { Recipe } from '../../models/recipe.model';
  */
 @Component({
   selector: 'app-recipe-form',
-  standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    RouterLink,
-    ButtonDirective,
-    LoaderComponent,
-  ],
+  imports: [ReactiveFormsModule, RouterLink, ButtonDirective, LoaderComponent],
   templateUrl: './recipe-form.component.html',
   styleUrl: './recipe-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RecipeFormComponent implements OnInit {
-  form: FormGroup;
-  isEdit = false;
-  recipe: Recipe | null = null;
-  loading = false;
-  loadError: string | null = null;
-  submitting = false;
-  submitError: string | null = null;
+  private readonly fb = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly recipeService = inject(RecipeService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  constructor(
-    private fb: FormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
-    private recipeService: RecipeService,
-    private cdr: ChangeDetectorRef,
-  ) {
-    this.form = this.fb.group({
-      title: ['', [Validators.required, Validators.maxLength(255)]],
-      description: [''],
-      content: ['', Validators.required],
-    });
-  }
+  protected readonly form: FormGroup<{
+    title: FormControl<string>;
+    description: FormControl<string>;
+    content: FormControl<string>;
+  }> = this.fb.nonNullable.group({
+    title: ['', [Validators.required, Validators.maxLength(255)]],
+    description: [''],
+    content: ['', Validators.required],
+  });
+
+  protected readonly isEdit = signal(false);
+  protected readonly recipe = signal<Recipe | null>(null);
+  protected readonly loading = signal(false);
+  protected readonly loadError = signal<string | null>(null);
+  protected readonly submitting = signal(false);
+  protected readonly submitError = signal<string | null>(null);
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      this.isEdit = true;
-      this.loading = true;
-      this.recipeService.getById(Number(id)).subscribe({
-        next: (data) => {
-          this.recipe = data;
-          this.form.patchValue({
-            title: data.title,
-            description: data.description ?? '',
-            content: data.content,
-          });
-          this.loading = false;
-          this.cdr.markForCheck();
-        },
-        error: (err) => {
-          this.loadError = `Recipe #${id} could not be loaded.`;
-          this.loading = false;
-          console.error(err);
-          this.cdr.markForCheck();
-        },
-      });
+      this.isEdit.set(true);
+      this.loading.set(true);
+      this.recipeService
+        .getById(Number(id))
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (data) => {
+            this.recipe.set(data);
+            this.form.patchValue({
+              title: data.title,
+              description: data.description ?? '',
+              content: data.content,
+            });
+            this.loading.set(false);
+          },
+          error: (err) => {
+            this.loadError.set(`Recipe #${id} could not be loaded.`);
+            this.loading.set(false);
+            console.error(err);
+          },
+        });
     }
   }
 
-  onSubmit(): void {
+  protected onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
-    const { title, description, content } = this.form.value;
+    const { title, description, content } = this.form.getRawValue();
     const request = { title, description: description || null, content };
 
-    this.submitting = true;
-    this.submitError = null;
+    this.submitting.set(true);
+    this.submitError.set(null);
 
-    const save$ = this.isEdit && this.recipe
-      ? this.recipeService.update(this.recipe.id, request)
-      : this.recipeService.create(request);
+    const currentRecipe = this.recipe();
+    const save$ =
+      this.isEdit() && currentRecipe
+        ? this.recipeService.update(currentRecipe.id, request)
+        : this.recipeService.create(request);
 
-    save$.subscribe({
+    save$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (saved) => {
         this.router.navigate(['/recipes', saved.id]);
       },
@@ -105,22 +117,22 @@ export class RecipeFormComponent implements OnInit {
           const msgs = Object.entries(err.error.errors)
             .map(([f, m]) => `${f}: ${m}`)
             .join('; ');
-          this.submitError = `Validation failed — ${msgs}`;
+          this.submitError.set(`Validation failed — ${msgs}`);
         } else {
-          this.submitError = 'Failed to save recipe. Please try again.';
+          this.submitError.set('Failed to save recipe. Please try again.');
         }
-        this.submitting = false;
+        this.submitting.set(false);
         console.error(err);
       },
     });
   }
 
-  isInvalid(field: string): boolean {
+  protected isInvalid(field: string): boolean {
     const ctrl = this.form.get(field);
     return !!(ctrl && ctrl.invalid && ctrl.touched);
   }
 
-  get titleError(): string {
+  protected get titleError(): string {
     const ctrl = this.form.get('title');
     if (ctrl?.errors?.['required']) return 'Title is required.';
     if (ctrl?.errors?.['maxlength']) return 'Title must not exceed 255 characters.';
