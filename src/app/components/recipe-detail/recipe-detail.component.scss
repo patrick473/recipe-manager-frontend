@@ -1,7 +1,7 @@
 :host {
   display: block;
-  max-width: 51.25rem;
-  margin: 0 auto;
+  max-width: var(--page-max-width);
+  margin: 0;
   padding: var(--space-5);
 }
 

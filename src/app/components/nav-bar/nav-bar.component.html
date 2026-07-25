@@ -1,7 +1,7 @@
 <nav class="side-nav" [class.expanded]="expanded()">
     <div class="side-nav-brand">
         <span class="side-nav-icon side-nav-icon--brand">
-            <app-icon name="chef-hat" [size]="22" />
+            <app-icon name="blender" [size]="22" />
         </span>
         @if (expanded()) {
         <span class="side-nav-title">Recipe Manager</span>
@@ -31,7 +31,7 @@
             class="side-nav-link"
             [attr.title]="expanded() ? null : 'New Recipe'">
             <span class="side-nav-icon">
-                <app-icon name="plus" [size]="18" />
+                <app-icon name="add" [size]="18" />
             </span>
             @if (expanded()) {
             <span class="side-nav-text">New Recipe</span>
@@ -49,12 +49,12 @@
 
         @if (expanded()) {
         <span class="side-nav-icon">
-            <app-icon name="chevron-left" [size]="18" />
+            <app-icon name="chevron_left" [size]="18" />
         </span>
         <span class="side-nav-text">Collapse</span>
         } @else {
         <span class="side-nav-icon">
-            <app-icon name="chevron-right" [size]="18" />
+            <app-icon name="chevron_right" [size]="18" />
         </span>
         }
     </button>
@@ -68,7 +68,7 @@
         [attr.aria-label]="theme.darkMode() ? 'Switch to light theme' : 'Switch to dark theme'"
         (click)="toggleTheme()">
         <span class="side-nav-icon">
-            <app-icon [name]="theme.darkMode() ? 'sun' : 'moon'" [size]="18" />
+            <app-icon [name]="theme.darkMode() ? 'sunny' : 'bedtime'" [size]="18" />
         </span>
         @if (expanded()) {
         <span class="side-nav-text">{{ theme.darkMode() ? 'Light mode' :
