@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonDirective } from '../../shared/button.directive';
@@ -29,6 +29,7 @@ import { Recipe } from '../../models/recipe.model';
   ],
   templateUrl: './recipe-form.component.html',
   styleUrl: './recipe-form.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RecipeFormComponent implements OnInit {
   form: FormGroup;
@@ -44,6 +45,7 @@ export class RecipeFormComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private recipeService: RecipeService,
+    private cdr: ChangeDetectorRef,
   ) {
     this.form = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(255)]],
@@ -66,11 +68,13 @@ export class RecipeFormComponent implements OnInit {
             content: data.content,
           });
           this.loading = false;
+          this.cdr.markForCheck();
         },
         error: (err) => {
           this.loadError = `Recipe #${id} could not be loaded.`;
           this.loading = false;
           console.error(err);
+          this.cdr.markForCheck();
         },
       });
     }

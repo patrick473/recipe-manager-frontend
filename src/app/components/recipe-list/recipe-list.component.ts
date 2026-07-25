@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { ButtonDirective } from '../../shared/button.directive';
@@ -20,6 +20,7 @@ import { RecipeService } from '../../services/recipe.service';
     imports: [RouterLink, DatePipe, ButtonDirective, IconComponent, LoaderComponent],
     templateUrl: './recipe-list.component.html',
     styleUrl: './recipe-list.component.scss',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RecipeListComponent implements OnInit {
   private readonly confirmService = inject(ConfirmDialogService);
