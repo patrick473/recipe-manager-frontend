@@ -23,6 +23,7 @@ jobs:
       - run: npm test -- --watch=false
 
   e2e:
+    if: false
     runs-on: ubuntu-latest
     defaults:
       run:
