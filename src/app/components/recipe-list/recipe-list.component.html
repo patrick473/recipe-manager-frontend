@@ -2,28 +2,29 @@
   <h2>Recipes</h2>
 </div>
 
-@if (error) {
-  <div class="alert alert-error">{{ error }}</div>
+@if (error()) {
+  <div class="notification notification-negative mb">{{ error() }}</div>
 }
 
-@if (loading) {
-  <div class="loading-spinner">
-    <p>Loading recipes…</p>
-  </div>
+@if (loading()) {
+  <app-loader size="l" text="Loading recipes…" class="loading-block" />
 }
 
-@if (!loading && recipes.length === 0 && !error) {
+@if (!loading() && recipes().length === 0 && !error()) {
   <div class="empty-state">
     <h2>No recipes yet</h2>
     <p>Create your first recipe to get started.</p>
-    <a routerLink="/recipes/new" class="btn btn-primary">+ New Recipe</a>
+    <a routerLink="/recipes/new" appButton appearance="primary">
+      <app-icon name="plus" [size]="16" />
+      New Recipe
+    </a>
   </div>
 }
 
-@if (!loading && recipes.length > 0) {
+@if (!loading() && recipes().length > 0) {
   <div class="recipe-grid">
-    @for (recipe of recipes; track recipe.id) {
-      <div class="recipe-card card">
+    @for (recipe of recipes(); track recipe.id) {
+      <div class="card recipe-card">
         <div class="recipe-card-body">
           <h3 class="recipe-card-title">
             <a [routerLink]="['/recipes', recipe.id]">{{ recipe.title }}</a>
@@ -33,12 +34,28 @@
           } @else {
             <p class="recipe-card-description muted">No description</p>
           }
-          <p class="recipe-card-date">Updated {{ recipe.updatedAt | date:'mediumDate' }}</p>
+          <p class="recipe-card-date">Updated {{ recipe.updatedAt | date: 'mediumDate' }}</p>
         </div>
         <div class="recipe-card-actions">
-          <a [routerLink]="['/recipes', recipe.id, 'edit']" class="btn btn-secondary btn-sm">Edit</a>
-          <button class="btn btn-danger btn-sm" (click)="deleteRecipe(recipe)" [disabled]="deleting === recipe.id">
-            {{ deleting === recipe.id ? 'Deleting…' : 'Delete' }}
+          <a
+            [routerLink]="['/recipes', recipe.id, 'edit']"
+            appButton
+            appearance="secondary"
+            size="s"
+          >
+            <app-icon name="pencil" [size]="14" />
+            Edit
+          </a>
+          <button
+            appButton
+            appearance="secondary-destructive"
+            size="s"
+            type="button"
+            (click)="deleteRecipe(recipe)"
+            [disabled]="deleting() === recipe.id"
+          >
+            <app-icon name="trash" [size]="14" />
+            {{ deleting() === recipe.id ? 'Deleting…' : 'Delete' }}
           </button>
         </div>
       </div>

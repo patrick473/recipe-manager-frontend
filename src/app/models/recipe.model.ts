@@ -1,20 +1,13 @@
+import type { RecipeResponse } from '../api/generated/model';
+
 /**
  * Matches the RecipeResponse DTO returned by the Spring Boot API.
+ * Generated from openapi.yaml via Orval — see src/app/api/generated.
  */
-export interface Recipe {
-  id: number;
-  title: string;
-  description: string | null;
-  content: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export type Recipe = RecipeResponse;
 
 /**
  * Matches the RecipeRequest DTO accepted by POST /recipes and PUT /recipes/{id}.
+ * Generated from openapi.yaml via Orval — see src/app/api/generated.
  */
-export interface RecipeRequest {
-  title: string;
-  description?: string | null;
-  content: string;
-}
+export type { RecipeRequest } from '../api/generated/model';

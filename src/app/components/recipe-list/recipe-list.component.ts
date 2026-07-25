@@ -1,66 +1,82 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  OnInit,
+  inject,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 import { Recipe } from '../../models/recipe.model';
 import { RecipeService } from '../../services/recipe.service';
+import { ButtonDirective } from '../../shared/button.directive';
+import { IconComponent } from '../../shared/icon/icon.component';
+import { LoaderComponent } from '../../shared/loader/loader.component';
 
 /**
  * Displays a card grid of all recipes. Each card links to the detail view.
- * Provides per-card delete with optimistic removal from the list.
+ * Provides per-card delete (via a confirm dialog) with optimistic
+ * removal from the list.
  *
- * Uses Angular 22 block control-flow (@if / @for / @empty) and
- * OnPush change detection for better runtime performance.
+ * Uses Angular 22 block control-flow (@if / @for / @empty).
  */
 @Component({
-    selector: 'app-recipe-list',
-    imports: [RouterLink, DatePipe],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    templateUrl: './recipe-list.component.html',
-    styleUrl: './recipe-list.component.css',
+  selector: 'app-recipe-list',
+  imports: [RouterLink, DatePipe, ButtonDirective, IconComponent, LoaderComponent],
+  templateUrl: './recipe-list.component.html',
+  styleUrl: './recipe-list.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RecipeListComponent implements OnInit {
-  recipes: Recipe[] = [];
-  loading = true;
-  error: string | null = null;
-  deleting: number | null = null;
+  private readonly recipeService = inject(RecipeService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  constructor(private recipeService: RecipeService) {}
+  protected readonly recipes = signal<Recipe[]>([]);
+  protected readonly loading = signal(true);
+  protected readonly error = signal<string | null>(null);
+  protected readonly deleting = signal<number | null>(null);
 
   ngOnInit(): void {
     this.loadRecipes();
   }
 
-  loadRecipes(): void {
-    this.loading = true;
-    this.error = null;
-    this.recipeService.getAll().subscribe({
-      next: (data) => {
-        this.recipes = data;
-        this.loading = false;
-      },
-      error: (err) => {
-        this.error = 'Failed to load recipes. Is the backend running?';
-        this.loading = false;
-        console.error(err);
-      },
-    });
+  private loadRecipes(): void {
+    this.loading.set(true);
+    this.error.set(null);
+    this.recipeService
+      .getAll()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data) => {
+          this.recipes.set(data);
+          this.loading.set(false);
+        },
+        error: (err) => {
+          this.error.set('Failed to load recipes. Is the backend running?');
+          this.loading.set(false);
+          console.error(err);
+        },
+      });
   }
 
-  deleteRecipe(recipe: Recipe): void {
-    if (!confirm(`Delete "${recipe.title}"? This cannot be undone.`)) {
-      return;
-    }
-    this.deleting = recipe.id;
-    this.recipeService.delete(recipe.id).subscribe({
-      next: () => {
-        this.recipes = this.recipes.filter((r) => r.id !== recipe.id);
-        this.deleting = null;
-      },
-      error: (err) => {
-        this.error = `Failed to delete "${recipe.title}".`;
-        this.deleting = null;
-        console.error(err);
-      },
-    });
+  protected deleteRecipe(recipe: Recipe): void {
+    this.recipeService
+      .deleteWithConfirm(recipe, () => this.deleting.set(recipe.id))
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (deleted) => {
+          this.deleting.set(null);
+          if (deleted) {
+            this.recipes.update((recipes) => recipes.filter((r) => r.id !== recipe.id));
+          }
+        },
+        error: (err) => {
+          this.error.set(`Failed to delete "${recipe.title}".`);
+          this.deleting.set(null);
+          console.error(err);
+        },
+      });
   }
 }

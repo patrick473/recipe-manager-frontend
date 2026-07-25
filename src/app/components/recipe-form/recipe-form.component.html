@@ -1,55 +1,55 @@
 <div class="form-page-header">
-  <div class="breadcrumb">
+  <nav class="breadcrumbs">
     <a routerLink="/recipes">Recipes</a>
-    @if (isEdit && recipe) {
-      <span> / </span>
-      <a [routerLink]="['/recipes', recipe.id]">{{ recipe.title }}</a>
+    @if (isEdit() && recipe()) {
+      <span class="breadcrumb-sep">/</span>
+      <a [routerLink]="['/recipes', recipe()!.id]">{{ recipe()!.title }}</a>
     }
-    <span> / </span>
-    <span>{{ isEdit ? 'Edit' : 'New Recipe' }}</span>
-  </div>
+    <span class="breadcrumb-sep">/</span>
+    <span>{{ isEdit() ? 'Edit' : 'New Recipe' }}</span>
+  </nav>
 </div>
 
-@if (loadError) {
-  <div class="alert alert-error">{{ loadError }}</div>
+@if (loadError()) {
+  <div class="notification notification-negative mb">{{ loadError() }}</div>
 }
 
-@if (loading) {
-  <div class="loading-spinner"><p>Loading…</p></div>
+@if (loading()) {
+  <app-loader size="l" text="Loading…" class="loading-block" />
 }
 
-@if (!loading) {
-  <div class="card">
-    <h2 class="form-title">{{ isEdit ? 'Edit Recipe' : 'New Recipe' }}</h2>
+@if (!loading()) {
+  <div class="card-lg">
+    <h2 class="form-title">{{ isEdit() ? 'Edit Recipe' : 'New Recipe' }}</h2>
 
-    @if (submitError) {
-      <div class="alert alert-error">{{ submitError }}</div>
+    @if (submitError()) {
+      <div class="notification notification-negative mb">{{ submitError() }}</div>
     }
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-
       <!-- Title -->
-      <div class="form-group">
-        <label for="title">Title <span class="required-marker">*</span></label>
+      <div class="field">
+        <label class="field-label" for="title">Title <span class="required-marker">*</span></label>
         <input
           id="title"
-          type="text"
+          class="field-input"
           formControlName="title"
           placeholder="e.g. Classic Banana Bread"
-          [class.is-invalid]="isInvalid('title')"
           autocomplete="off"
         />
         @if (isInvalid('title')) {
-          <span class="field-error">{{ titleError }}</span>
+          <p class="field-error">{{ titleError }}</p>
         }
       </div>
 
       <!-- Description -->
-      <div class="form-group">
-        <label for="description">Description <span class="optional-label">(optional)</span></label>
+      <div class="field">
+        <label class="field-label" for="description"
+          >Description <span class="optional-label">(optional)</span></label
+        >
         <input
           id="description"
-          type="text"
+          class="field-input"
           formControlName="description"
           placeholder="One-line summary shown in the recipe list"
           autocomplete="off"
@@ -57,28 +57,30 @@
       </div>
 
       <!-- Content (Markdown) -->
-      <div class="form-group">
-        <label for="content">Content (Markdown) <span class="required-marker">*</span></label>
+      <div class="field">
+        <label class="field-label" for="content"
+          >Content (Markdown) <span class="required-marker">*</span></label
+        >
         <textarea
           id="content"
+          class="field-input"
           formControlName="content"
           rows="16"
           placeholder="## Ingredients&#10;- ...&#10;&#10;## Steps&#10;1. ..."
-          [class.is-invalid]="isInvalid('content')"
         ></textarea>
         @if (isInvalid('content')) {
-          <span class="field-error">Content is required.</span>
+          <p class="field-error">Content is required.</p>
         }
       </div>
 
       <div class="form-actions">
-        <button type="submit" class="btn btn-primary" [disabled]="submitting">
-          {{ submitting ? 'Saving…' : (isEdit ? 'Save Changes' : 'Create Recipe') }}
+        <button appButton appearance="primary" type="submit" [disabled]="submitting()">
+          {{ submitting() ? 'Saving…' : isEdit() ? 'Save Changes' : 'Create Recipe' }}
         </button>
-        @if (isEdit && recipe) {
-          <a [routerLink]="['/recipes', recipe.id]" class="btn btn-secondary">Cancel</a>
+        @if (isEdit() && recipe()) {
+          <a [routerLink]="['/recipes', recipe()!.id]" appButton appearance="secondary">Cancel</a>
         } @else {
-          <a routerLink="/recipes" class="btn btn-secondary">Cancel</a>
+          <a routerLink="/recipes" appButton appearance="secondary">Cancel</a>
         }
       </div>
     </form>

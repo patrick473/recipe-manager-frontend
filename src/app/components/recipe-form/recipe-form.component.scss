@@ -1,0 +1,24 @@
+:host {
+  display: block;
+  max-width: var(--page-max-width);
+  margin: 0;
+  padding: var(--space-5);
+}
+
+.form-page-header {
+  margin-bottom: var(--space-2);
+}
+
+.form-title {
+  margin-bottom: var(--space-5);
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.loading-block {
+  padding: var(--space-8) 0;
+}

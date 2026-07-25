@@ -24,3 +24,8 @@ Thumbs.db
 
 # Environment overrides (add project-specific envs manually)
 # src/environments/environment.prod.ts is committed intentionally
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
