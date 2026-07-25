@@ -2,7 +2,7 @@
 
 Notes from implementing `UNIT_TESTING_SPEC.md` (2026-07-25), done via
 orchestrated subagents rather than a single pass. Kept alongside the spec
-for future reference on *how* the coverage got written, not just what
+for future reference on _how_ the coverage got written, not just what
 exists (the spec doc's own checklist covers that).
 
 ## Summary
@@ -47,7 +47,7 @@ zero collisions.** Unlike the earlier style-spec migration (where a
 repo-wide formatter pass had to run alone before anything else), test
 files are additive and don't share files across the three groups — so all
 three ran concurrently from the start with no sequencing step needed. The
-general rule still held: parallelize by *file ownership*, not by
+general rule still held: parallelize by _file ownership_, not by
 spec-bullet.
 
 **The documented test-run command doesn't actually work, and every agent
@@ -82,7 +82,7 @@ properties, not just for the method calls the spec doc's examples showed.
 done.** Two of the shell/shared-UI spec files weren't run through
 `prettier --write` before that agent finished — caught only at the final
 manual `format:check` pass across all three groups' output. Worth telling
-agents explicitly to lint/format their *own* new files before reporting
+agents explicitly to lint/format their _own_ new files before reporting
 completion, not just rely on a final sweep to catch it.
 
 **A pre-existing lint issue resurfaced — same one as last time, and this

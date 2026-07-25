@@ -2,7 +2,7 @@
 
 Notes from implementing `CODE_STYLE_SPEC.md` (2026-07-25), done via orchestrated
 subagents rather than a single pass. Kept alongside the spec for future
-reference on *how* the convergence happened, not just what changed (the spec
+reference on _how_ the convergence happened, not just what changed (the spec
 doc itself has per-item "Resolution" notes for that).
 
 ## Summary
@@ -38,23 +38,24 @@ deferred with a stated reason. Verified with lint/tsc/tests/build at the end.
 **Sequencing beats parallelism when files or a formatter overlap.** The
 instinct is to fan everything out to subagents at once, but
 tooling-that-rewrites-every-file and edits-to-those-same-files can't safely
-run concurrently. The rule that generalized well: group work by *file
-ownership*, not by spec-bullet, and only parallelize groups with zero file
+run concurrently. The rule that generalized well: group work by _file
+ownership_, not by spec-bullet, and only parallelize groups with zero file
 overlap.
 
 **Giving agents literal before/after code snippets in the prompt worked
 better than describing intent.** Since Prettier had already reformatted
 everything, each agent was told explicitly "re-read the file fresh, don't
 trust old indentation" — but still given the pre-formatting code as a stable
-reference for *what to change conceptually*. This avoided both stale-diff
+reference for _what to change conceptually_. This avoided both stale-diff
 failures and vague "please migrate this component" prompts that would've
 produced inconsistent output across the 3 near-identical component
 migrations.
 
 **The subagents surfaced real Angular gotchas only sketched in the prompt:**
+
 - `takeUntilDestroyed()` with no args only works inside an actual injection
   context (constructor, field initializer). Calling it bare inside
-  `ngOnInit` throws `NG0203` at *runtime*, not compile time — `tsc` won't
+  `ngOnInit` throws `NG0203` at _runtime_, not compile time — `tsc` won't
   catch it. One agent (recipe-form) called this out explicitly and used an
   explicit `DestroyRef` everywhere for consistency; worth treating as a
   checklist item, not just "add takeUntilDestroyed and move on."
@@ -63,7 +64,7 @@ migrations.
   `recipe()!.x` non-null assertions. Two agents converged on the
   `as`-binding pattern independently, a good sign it's the right idiom.
 
-**Explicitly telling agents what *not* to do prevented scope creep.** Each
+**Explicitly telling agents what _not_ to do prevented scope creep.** Each
 migration agent was told "don't extract the delete-confirm flow yet, don't
 touch the standalone flag, that's someone else's file" — without that, at
 least one probably would have "helpfully" fixed the duplication itself

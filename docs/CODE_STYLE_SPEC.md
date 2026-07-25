@@ -29,9 +29,9 @@ symptom of that.
       repo-wide, to eliminate the whitespace/indentation drift called out
       below before doing anything else.
 - [ ] Wire lint into CI (or at minimum document it as a pre-PR step) so drift
-      doesn't reaccumulate. *(Not done — no CI pipeline exists in this repo
+      doesn't reaccumulate. _(Not done — no CI pipeline exists in this repo
       yet to wire into; `npm run lint`/`npm run format` are available as a
-      manual pre-PR step in the meantime.)*
+      manual pre-PR step in the meantime.)_
 
 ## P0 — Dependency injection: `inject()` vs constructor injection ✅ Resolved
 

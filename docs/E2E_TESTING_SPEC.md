@@ -6,13 +6,13 @@ Companion to [UNIT_TESTING_SPEC.md](./UNIT_TESTING_SPEC.md) — kept as a
 separate document because these two suites are effectively separate
 projects glued to the same repo:
 
-| | Unit (Vitest) | E2E (Playwright) |
-|---|---|---|
-| Runs against | Components/services in isolation, HTTP mocked | Full stack: `ng serve` + real Spring Boot API + H2 |
-| Speed | Milliseconds per test | Seconds per test (real browser, real network) |
-| Catches | Logic errors, edge cases, per-unit regressions | Wiring bugs across the frontend/backend contract, routing, real DOM/CSS interaction, a11y at the rendered-page level |
-| New tooling required | None (already wired) | Yes — `@playwright/test` isn't installed yet |
-| Where it lives | Colocated `*.spec.ts` under `src/` | A new top-level `e2e/` directory, outside `src/` |
+|                      | Unit (Vitest)                                  | E2E (Playwright)                                                                                                     |
+| -------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Runs against         | Components/services in isolation, HTTP mocked  | Full stack: `ng serve` + real Spring Boot API + H2                                                                   |
+| Speed                | Milliseconds per test                          | Seconds per test (real browser, real network)                                                                        |
+| Catches              | Logic errors, edge cases, per-unit regressions | Wiring bugs across the frontend/backend contract, routing, real DOM/CSS interaction, a11y at the rendered-page level |
+| New tooling required | None (already wired)                           | Yes — `@playwright/test` isn't installed yet                                                                         |
+| Where it lives       | Colocated `*.spec.ts` under `src/`             | A new top-level `e2e/` directory, outside `src/`                                                                     |
 
 Splitting them (rather than one "testing spec") means each can be scoped,
 staffed, and run independently — e.g. unit tests run on every save in watch
@@ -233,27 +233,32 @@ tests — no separate "start both" step needed in CI, and locally
   so it shouldn't block fast feedback from unit tests/lint):
 
 ```yaml
-  e2e:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: recipe-manager-frontend
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm, cache-dependency-path: recipe-manager-frontend/package-lock.json }
-      - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: '25', cache: maven }
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npx playwright test
-        env:
-          CI: true
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report
-          path: recipe-manager-frontend/playwright-report/
+e2e:
+  runs-on: ubuntu-latest
+  defaults:
+    run:
+      working-directory: recipe-manager-frontend
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        {
+          node-version: 22,
+          cache: npm,
+          cache-dependency-path: recipe-manager-frontend/package-lock.json,
+        }
+    - uses: actions/setup-java@v4
+      with: { distribution: temurin, java-version: '25', cache: maven }
+    - run: npm ci
+    - run: npx playwright install --with-deps chromium
+    - run: npx playwright test
+      env:
+        CI: true
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: recipe-manager-frontend/playwright-report/
 ```
 
 ## Rollout

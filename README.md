@@ -120,22 +120,22 @@ Because the generated client emits relative URLs (e.g. `/recipes`), `src/app/int
 
 `RecipeService` (`src/app/services/recipe.service.ts`) wraps the generated `RecipesService` and layers Angular signals on top for reactive UI state.
 
-| Method | Signature | Maps to |
-| --- | --- | --- |
-| `getAll()` | `(): Observable<Recipe[]>` | `GET /recipes` |
-| `getById(id)` | `(id: number): Observable<Recipe>` | `GET /recipes/{id}` |
-| `create(request)` | `(r: RecipeRequest): Observable<Recipe>` | `POST /recipes` |
-| `update(id, request)` | `(id, r: RecipeRequest): Observable<Recipe>` | `PUT /recipes/{id}` |
-| `delete(id)` | `(id: number): Observable<void>` | `DELETE /recipes/{id}` |
+| Method                      | Signature                                                    | Maps to                                                          |
+| --------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------- |
+| `getAll()`                  | `(): Observable<Recipe[]>`                                   | `GET /recipes`                                                   |
+| `getById(id)`               | `(id: number): Observable<Recipe>`                           | `GET /recipes/{id}`                                              |
+| `create(request)`           | `(r: RecipeRequest): Observable<Recipe>`                     | `POST /recipes`                                                  |
+| `update(id, request)`       | `(id, r: RecipeRequest): Observable<Recipe>`                 | `PUT /recipes/{id}`                                              |
+| `delete(id)`                | `(id: number): Observable<void>`                             | `DELETE /recipes/{id}`                                           |
 | `deleteWithConfirm(recipe)` | `(r: Recipe, onConfirmed?: () => void): Observable<boolean>` | shows a confirm dialog, then `DELETE /recipes/{id}` if confirmed |
 
 It also exposes reactive state consumed by components:
 
-| Signal | Type | Description |
-| --- | --- | --- |
-| `loading` | `Signal<boolean>` | True while a `getAll()` request is in flight |
-| `recipeCount` | `Signal<number>` | Updated after `getAll()` / `create()` / `delete()` |
-| `hasRecipes` | `Signal<boolean>` (computed) | `recipeCount() > 0` |
+| Signal        | Type                         | Description                                        |
+| ------------- | ---------------------------- | -------------------------------------------------- |
+| `loading`     | `Signal<boolean>`            | True while a `getAll()` request is in flight       |
+| `recipeCount` | `Signal<number>`             | Updated after `getAll()` / `create()` / `delete()` |
+| `hasRecipes`  | `Signal<boolean>` (computed) | `recipeCount() > 0`                                |
 
 Inject the service with field-based `inject()` — the codebase uses `inject()` everywhere and never uses constructor injection:
 

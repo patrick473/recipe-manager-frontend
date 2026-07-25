@@ -52,7 +52,7 @@ low-risk, nice-to-have coverage.
   in the full router config from `app.routes.ts` unless a test specifically
   needs route resolution.
 - Test descriptions read as behavior, not implementation (`'shows a 404
-  message when the recipe does not exist'`, not `'sets error signal'`).
+message when the recipe does not exist'`, not `'sets error signal'`).
 - No snapshot testing — the app is small enough that explicit assertions on
   signals/DOM stay readable, and snapshots tend to bit-rot silently.
 

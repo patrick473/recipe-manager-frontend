@@ -1,7 +1,7 @@
 # E2E Testing Spec Implementation — Summary & Lessons Learned
 
 Notes from implementing `E2E_TESTING_SPEC.md` (2026-07-25). Kept alongside
-the spec for future reference on *how* the suite got built and what tripped
+the spec for future reference on _how_ the suite got built and what tripped
 it up along the way, not just what exists (the spec doc's own checklist
 covers that).
 
@@ -54,16 +54,16 @@ test. Wouldn't have found this by reading the frontend alone.
 **Running the suite for real caught two bugs that reading the code
 wouldn't have.** Both were invisible until actual execution:
 
-- *TypeScript field-initializer ordering.* Page objects that read
+- _TypeScript field-initializer ordering._ Page objects that read
   `this.page` (a constructor parameter property) inside `readonly` field
   initializers failed with `TS2729: used before its initialization` — a
   consequence of `target: ES2022`'s `useDefineForClassFields` semantics,
   where class field initializers run in declaration order and a parameter
   property isn't guaranteed to be assigned first. Fixed by moving all
-  locator construction into the constructor *body* instead of field
+  locator construction into the constructor _body_ instead of field
   initializers. Worth remembering for any future Page Object Model code in
   this repo's TS config.
-- *Playwright strict-mode duplicity.* The CRUD spec's first draft used
+- _Playwright strict-mode duplicity._ The CRUD spec's first draft used
   recipe content containing both "flour" and "Mix the flour." — a bare
   `getByText('flour')` matched both, failing strict mode. Fixed by using
   non-overlapping content strings and `{ exact: true }`. A reminder that
@@ -81,7 +81,7 @@ that resolution mode. Settled on `module: esnext` /
 
 **The spec's own proposed CI job has a gap the spec doesn't mention:** its
 `webServer` config runs `mvn spring-boot:run` from `../recipe-manager-backend`,
-but per `CLAUDE.md` this workspace is two *independent* git repos, and the
+but per `CLAUDE.md` this workspace is two _independent_ git repos, and the
 CI job's `actions/checkout@v4` only pulls the frontend one. On a fresh
 runner, the sibling directory the config depends on simply won't exist.
 This was flagged rather than silently "fixed," since the right fix (a
