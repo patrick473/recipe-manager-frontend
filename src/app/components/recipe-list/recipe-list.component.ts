@@ -15,6 +15,15 @@ import { ButtonDirective } from '../../shared/button.directive';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { LoaderComponent } from '../../shared/loader/loader.component';
 
+type ViewMode = 'grid' | 'list';
+
+const VIEW_MODE_STORAGE_KEY = 'recipeListViewMode';
+
+function initialViewMode(): ViewMode {
+  const stored = localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+  return stored === 'list' ? 'list' : 'grid';
+}
+
 /**
  * Displays a card grid of all recipes. Each card links to the detail view.
  * Provides per-card delete (via a confirm dialog) with optimistic
@@ -37,6 +46,7 @@ export class RecipeListComponent implements OnInit {
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly deleting = signal<number | null>(null);
+  protected readonly viewMode = signal<ViewMode>(initialViewMode());
 
   ngOnInit(): void {
     this.loadRecipes();
@@ -59,6 +69,11 @@ export class RecipeListComponent implements OnInit {
           console.error(err);
         },
       });
+  }
+
+  protected setViewMode(mode: ViewMode): void {
+    this.viewMode.set(mode);
+    localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
   }
 
   protected deleteRecipe(recipe: Recipe): void {
