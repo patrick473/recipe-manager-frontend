@@ -700,6 +700,70 @@ describe('RecipeListComponent', () => {
     });
   });
 
+  describe('thumbnails', () => {
+    it('renders an <img> with the resolved src for a recipe with an imageUrl (grid mode)', () => {
+      const recipeWithImage: Recipe = { ...mockRecipes[0], imageUrl: '/recipes/1/image' };
+      fakeRecipeService.getAll.mockReturnValue(of(toPage([recipeWithImage, mockRecipes[1]])));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      fixture.detectChanges();
+
+      const element = fixture.nativeElement as HTMLElement;
+      const img = element.querySelector('.recipe-card-thumb') as HTMLImageElement;
+
+      expect(img).toBeTruthy();
+      expect(img.tagName).toBe('IMG');
+      expect(img.getAttribute('src')).toBe('http://localhost:8080/recipes/1/image');
+    });
+
+    it('renders a placeholder icon (no <img>) for a recipe without an imageUrl (grid mode)', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      fixture.detectChanges();
+
+      const element = fixture.nativeElement as HTMLElement;
+      const thumbs = element.querySelectorAll('.recipe-card-thumb');
+      const placeholder = thumbs[0] as HTMLElement;
+
+      expect(placeholder.tagName).not.toBe('IMG');
+      expect(placeholder.classList.contains('image-placeholder')).toBe(true);
+      expect(placeholder.querySelector('app-icon')).toBeTruthy();
+    });
+
+    it('renders an <img> with the resolved src for a recipe with an imageUrl (list mode)', () => {
+      localStorage.setItem('recipeListViewMode', 'list');
+      const recipeWithImage: Recipe = { ...mockRecipes[0], imageUrl: '/recipes/1/image' };
+      fakeRecipeService.getAll.mockReturnValue(of(toPage([recipeWithImage, mockRecipes[1]])));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      fixture.detectChanges();
+
+      const element = fixture.nativeElement as HTMLElement;
+      const img = element.querySelector('.recipe-list-row-thumb') as HTMLImageElement;
+
+      expect(img).toBeTruthy();
+      expect(img.tagName).toBe('IMG');
+      expect(img.getAttribute('src')).toBe('http://localhost:8080/recipes/1/image');
+    });
+
+    it('renders a placeholder icon (no <img>) for a recipe without an imageUrl (list mode)', () => {
+      localStorage.setItem('recipeListViewMode', 'list');
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      fixture.detectChanges();
+
+      const element = fixture.nativeElement as HTMLElement;
+      const thumbs = element.querySelectorAll('.recipe-list-row-thumb');
+      const placeholder = thumbs[0] as HTMLElement;
+
+      expect(placeholder.tagName).not.toBe('IMG');
+      expect(placeholder.classList.contains('image-placeholder')).toBe(true);
+      expect(placeholder.querySelector('app-icon')).toBeTruthy();
+    });
+  });
+
   describe('query param seeding and sync', () => {
     it('seeds searchText/activeTags/sortKey/sortDir/page from the route query params on init', () => {
       TestBed.overrideProvider(ActivatedRoute, {

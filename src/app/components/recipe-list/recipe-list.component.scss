@@ -131,6 +131,25 @@
   gap: var(--space-4);
 }
 
+.recipe-card-thumb {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
+
+.image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-hover);
+  color: var(--color-text-muted);
+}
+
+.image-placeholder-sm {
+  border-radius: var(--radius-sm);
+}
+
 .recipe-card-title {
   margin-bottom: var(--space-1);
 
@@ -183,6 +202,14 @@
   &:last-child {
     border-bottom: none;
   }
+}
+
+.recipe-list-row-thumb {
+  flex: 0 0 auto;
+  width: 3rem;
+  height: 3rem;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
 }
 
 .recipe-list-row-main {

@@ -33,7 +33,8 @@ import type {
   ListRecipesParams,
   RecipePageResponse,
   RecipeRequest,
-  RecipeResponse
+  RecipeResponse,
+  UploadRecipeImageBody
 } from '../model';
 
 
@@ -141,7 +142,13 @@ function filterParams(
 
 
 
+export type GetRecipeImageAccept = typeof GetRecipeImageAccept[keyof typeof GetRecipeImageAccept];
 
+export const GetRecipeImageAccept = {
+  image_jpeg: 'image/jpeg',
+  image_png: 'image/png',
+  image_webp: 'image/webp',
+} as const;
 
 @Injectable({ providedIn: 'root' })
 export class RecipesService {
@@ -328,6 +335,130 @@ export class RecipesService {
       }
     );
   }
+/**
+ * Uploads (or replaces) the recipe's hero image. A recipe has at most one image; uploading a new one deletes the previously stored file. Accepts `image/jpeg`, `image/png`, or `image/webp`, up to 5MB; content is sniffed server-side and rejected if it doesn't actually decode as an image of the declared type.
+ * @summary Upload a recipe's hero image
+ */
+ uploadRecipeImage<TData = RecipeResponse>(id: number,
+    uploadRecipeImageBody: UploadRecipeImageBody, options?: HttpClientBodyOptions): Observable<TData>;
+ uploadRecipeImage<TData = RecipeResponse>(id: number,
+    uploadRecipeImageBody: UploadRecipeImageBody, options?: HttpClientEventOptions): Observable<HttpEvent<TData>>;
+ uploadRecipeImage<TData = RecipeResponse>(id: number,
+    uploadRecipeImageBody: UploadRecipeImageBody, options?: HttpClientResponseOptions): Observable<AngularHttpResponse<TData>>;
+  uploadRecipeImage<TData = RecipeResponse>(
+    id: number,
+    uploadRecipeImageBody: UploadRecipeImageBody, options?: HttpClientObserveOptions): Observable<TData | HttpEvent<TData> | AngularHttpResponse<TData>> {const formData = new FormData();
+formData.append(`file`, uploadRecipeImageBody.file);
+
+    if (options?.observe === 'events') {
+      return this.http.post<TData>(
+      `/recipes/${id}/image`,
+      formData,{
+        ...(options as Omit<NonNullable<typeof options>, 'observe'>),
+        observe: 'events',
+      }
+    );
+    }
+
+    if (options?.observe === 'response') {
+      return this.http.post<TData>(
+      `/recipes/${id}/image`,
+      formData,{
+        ...(options as Omit<NonNullable<typeof options>, 'observe'>),
+        observe: 'response',
+      }
+    );
+    }
+
+    return this.http.post<TData>(
+      `/recipes/${id}/image`,
+      formData,{
+        ...(options as Omit<NonNullable<typeof options>, 'observe'>),
+        observe: 'body',
+      }
+    );
+  }
+/**
+ * Removes the recipe's stored image and clears its image reference. Idempotent — returns 200 even if the recipe had no image.
+ * @summary Delete a recipe's hero image
+ */
+ deleteRecipeImage<TData = RecipeResponse>(id: number, options?: HttpClientBodyOptions): Observable<TData>;
+ deleteRecipeImage<TData = RecipeResponse>(id: number, options?: HttpClientEventOptions): Observable<HttpEvent<TData>>;
+ deleteRecipeImage<TData = RecipeResponse>(id: number, options?: HttpClientResponseOptions): Observable<AngularHttpResponse<TData>>;
+  deleteRecipeImage<TData = RecipeResponse>(
+    id: number, options?: HttpClientObserveOptions): Observable<TData | HttpEvent<TData> | AngularHttpResponse<TData>> {
+    if (options?.observe === 'events') {
+      return this.http.delete<TData>(
+      `/recipes/${id}/image`,{
+        ...(options as Omit<NonNullable<typeof options>, 'observe'>),
+        observe: 'events',
+      }
+    );
+    }
+
+    if (options?.observe === 'response') {
+      return this.http.delete<TData>(
+      `/recipes/${id}/image`,{
+        ...(options as Omit<NonNullable<typeof options>, 'observe'>),
+        observe: 'response',
+      }
+    );
+    }
+
+    return this.http.delete<TData>(
+      `/recipes/${id}/image`,{
+        ...(options as Omit<NonNullable<typeof options>, 'observe'>),
+        observe: 'body',
+      }
+    );
+  }
+/**
+ * Streams the raw image bytes for the recipe's hero image, with a long-lived, immutable `Cache-Control` header (filenames are content-addressed, so a cache-bust on replace is automatic).
+ * @summary Get a recipe's hero image
+ */
+ getRecipeImage(id: number,
+    accept: 'image/jpeg', options?: HttpClientOptions): Observable<Blob>;
+  getRecipeImage(id: number,
+    accept: 'image/png', options?: HttpClientOptions): Observable<Blob>;
+  getRecipeImage(id: number,
+    accept: 'image/webp', options?: HttpClientOptions): Observable<Blob>;
+  getRecipeImage(id: number,
+    accept?: GetRecipeImageAccept, options?: HttpClientOptions): Observable<unknown | Blob>;
+  getRecipeImage(
+    id: number,
+    accept: GetRecipeImageAccept = 'image/jpeg',
+    options?: HttpClientOptions
+  ): Observable<unknown | Blob> {
+    const headers = options?.headers instanceof HttpHeaders
+      ? options.headers.set('Accept', accept)
+      : { ...(options?.headers ?? {}), Accept: accept };
+
+    if (accept.includes('json') || accept.includes('+json')) {
+      return this.http.get<unknown>(`/recipes/${id}/image`, {
+        ...options,
+        responseType: 'json',
+        headers,
+
+
+      });
+    } else if (accept.startsWith('text/') || accept.includes('xml')) {
+      return this.http.get(`/recipes/${id}/image`, {
+        ...options,
+        responseType: 'text',
+        headers,
+
+
+      }) as Observable<any>;
+    } else {
+      return this.http.get(`/recipes/${id}/image`, {
+        ...options,
+        responseType: 'blob',
+        headers,
+
+
+      }) as Observable<Blob>;
+    }
+  }
 };
 
 export type ListRecipesClientResult = NonNullable<RecipePageResponse>
@@ -335,3 +466,6 @@ export type CreateRecipeClientResult = NonNullable<RecipeResponse>
 export type GetRecipeClientResult = NonNullable<RecipeResponse>
 export type UpdateRecipeClientResult = NonNullable<RecipeResponse>
 export type DeleteRecipeClientResult = NonNullable<void>
+export type UploadRecipeImageClientResult = NonNullable<RecipeResponse>
+export type DeleteRecipeImageClientResult = NonNullable<RecipeResponse>
+export type GetRecipeImageClientResult = NonNullable<Blob>

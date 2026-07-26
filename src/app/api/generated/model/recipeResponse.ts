@@ -53,6 +53,11 @@ export interface RecipeResponse {
      * @nullable
      */
   servings?: number | null;
+  /**
+     * Relative URL to the recipe's hero image (`/recipes/{id}/image`), or `null` if no image has been uploaded.
+     * @nullable
+     */
+  readonly imageUrl?: string | null;
   /** UTC timestamp of first creation */
   readonly createdAt: string;
   /** UTC timestamp of last modification */

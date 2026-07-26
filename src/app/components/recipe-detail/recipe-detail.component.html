@@ -10,6 +10,12 @@
   </div>
 }
 
+@if (imageUploadFailed()) {
+  <div class="notification mb">
+    Recipe created, but the image failed to upload — try again from the edit page.
+  </div>
+}
+
 @if (recipe(); as r) {
   @if (!loading()) {
     <div>
@@ -42,6 +48,9 @@
       </div>
 
       <div class="card-lg detail-card">
+        @if (resolveImageUrl(r.imageUrl); as heroSrc) {
+          <img class="detail-hero" [src]="heroSrc" [alt]="r.title" />
+        }
         <h1 class="detail-title">{{ r.title }}</h1>
         @if (r.description) {
           <p class="detail-description">{{ r.description }}</p>

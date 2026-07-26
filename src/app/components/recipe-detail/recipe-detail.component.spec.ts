@@ -154,6 +154,56 @@ describe('RecipeDetailComponent', () => {
     });
   });
 
+  it('renders a hero <img> with the resolved src when the recipe has an imageUrl', () => {
+    const recipeWithImage: Recipe = { ...mockRecipe, imageUrl: '/recipes/1/image' };
+    fakeRecipeService.getById.mockReturnValue(of(recipeWithImage));
+    configure('1');
+
+    const fixture = TestBed.createComponent(RecipeDetailComponent);
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const img = element.querySelector('.detail-hero') as HTMLImageElement;
+
+    expect(img).toBeTruthy();
+    expect(img.getAttribute('src')).toBe('http://localhost:8080/recipes/1/image');
+  });
+
+  it('renders no hero image (and no placeholder) when the recipe has no imageUrl', () => {
+    fakeRecipeService.getById.mockReturnValue(of(mockRecipe));
+    configure('1');
+
+    const fixture = TestBed.createComponent(RecipeDetailComponent);
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(element.querySelector('.detail-hero')).toBeNull();
+  });
+
+  it('shows the image-upload-failed notification when navigated here with that router state', () => {
+    vi.spyOn(window.history, 'state', 'get').mockReturnValue({ imageUploadFailed: true });
+    fakeRecipeService.getById.mockReturnValue(of(mockRecipe));
+    configure('1');
+
+    const fixture = TestBed.createComponent(RecipeDetailComponent);
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.textContent).toContain('Recipe created, but the image failed to upload');
+  });
+
+  it('does not show the image-upload-failed notification on a normal visit', () => {
+    fakeRecipeService.getById.mockReturnValue(of(mockRecipe));
+    configure('1');
+
+    const fixture = TestBed.createComponent(RecipeDetailComponent);
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.textContent).not.toContain('failed to upload');
+  });
+
   it('sets error() and clears deleting() on delete failure', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     fakeRecipeService.getById.mockReturnValue(of(mockRecipe));

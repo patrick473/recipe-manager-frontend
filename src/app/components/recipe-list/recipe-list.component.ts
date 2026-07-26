@@ -15,6 +15,7 @@ import { Recipe } from '../../models/recipe.model';
 import { RecipeService } from '../../services/recipe.service';
 import { ButtonDirective } from '../../shared/button.directive';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { resolveImageUrl } from '../../shared/image-url.util';
 import { LoaderComponent } from '../../shared/loader/loader.component';
 import { totalTimeMinutes } from '../../shared/recipe-time.util';
 
@@ -205,6 +206,7 @@ export class RecipeListComponent implements OnInit {
   }
 
   protected readonly totalTimeMinutes = totalTimeMinutes;
+  protected readonly resolveImageUrl = resolveImageUrl;
 
   protected setViewMode(mode: ViewMode): void {
     this.viewMode.set(mode);

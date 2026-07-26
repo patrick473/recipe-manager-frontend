@@ -15,6 +15,7 @@ import { Recipe } from '../../models/recipe.model';
 import { RecipeService } from '../../services/recipe.service';
 import { ButtonDirective } from '../../shared/button.directive';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { resolveImageUrl } from '../../shared/image-url.util';
 import { LoaderComponent } from '../../shared/loader/loader.component';
 import { PropertiesPanelComponent } from '../../shared/properties-panel/properties-panel.component';
 import { totalTimeMinutes } from '../../shared/recipe-time.util';
@@ -54,7 +55,14 @@ export class RecipeDetailComponent implements OnInit {
   protected readonly error = signal<string | null>(null);
   protected readonly deleting = signal(false);
 
+  // Set by RecipeFormComponent's create-mode navigation when the recipe was
+  // created successfully but the follow-up image upload failed — surfaced
+  // here (rather than as a submitError on the form) because the form already
+  // navigated away by the time this is known.
+  protected readonly imageUploadFailed = signal(!!history.state?.imageUploadFailed);
+
   protected readonly totalTimeMinutes = totalTimeMinutes;
+  protected readonly resolveImageUrl = resolveImageUrl;
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
