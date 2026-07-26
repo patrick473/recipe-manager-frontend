@@ -30,6 +30,61 @@
   </div>
 </div>
 
+@if (!loading() && recipes().length > 0) {
+  <div class="recipe-list-toolbar">
+    <input
+      type="search"
+      class="recipe-search-input"
+      placeholder="Search recipes…"
+      aria-label="Search recipes"
+      [value]="searchText()"
+      (input)="onSearchInput($event)"
+    />
+
+    <div class="recipe-sort-controls">
+      <select
+        class="recipe-sort-select"
+        aria-label="Sort by"
+        [value]="sortKey()"
+        (change)="onSortKeyChange($event)"
+      >
+        <option value="title">Title</option>
+        <option value="prepTimeMinutes">Prep time</option>
+        <option value="cookTimeMinutes">Cook time</option>
+        <option value="createdAt">Created date</option>
+        <option value="updatedAt">Updated date</option>
+      </select>
+      <button
+        type="button"
+        appButton
+        appearance="secondary"
+        size="s"
+        [iconOnly]="true"
+        [attr.aria-label]="sortDir() === 'asc' ? 'Sort ascending' : 'Sort descending'"
+        (click)="setSort(sortKey())"
+      >
+        <app-icon [name]="sortDir() === 'asc' ? 'arrow_upward' : 'arrow_downward'" [size]="16" />
+      </button>
+    </div>
+
+    @if (availableTags().length > 0) {
+      <div class="recipe-tag-filters">
+        @for (tag of availableTags(); track tag) {
+          <button
+            type="button"
+            class="filter-chip"
+            [class.active]="activeTags().has(tag)"
+            [attr.aria-pressed]="activeTags().has(tag)"
+            (click)="toggleTag(tag)"
+          >
+            {{ tag }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+}
+
 @if (error()) {
   <div class="notification notification-negative mb">{{ error() }}</div>
 }
@@ -49,10 +104,20 @@
   </div>
 }
 
-@if (!loading() && recipes().length > 0) {
+@if (!loading() && recipes().length > 0 && sortedRecipes().length === 0) {
+  <div class="empty-state">
+    <h2>No matches</h2>
+    <p>No recipes match your search.</p>
+    <button type="button" appButton appearance="secondary" (click)="clearFilters()">
+      Clear filters
+    </button>
+  </div>
+}
+
+@if (!loading() && sortedRecipes().length > 0) {
   @if (viewMode() === 'grid') {
     <div class="recipe-grid">
-      @for (recipe of recipes(); track recipe.id) {
+      @for (recipe of sortedRecipes(); track recipe.id) {
         <div class="card recipe-card">
           <div class="recipe-card-body">
             <h3 class="recipe-card-title">
@@ -64,6 +129,9 @@
               <p class="recipe-card-description muted">No description</p>
             }
             <p class="recipe-card-date">Updated {{ recipe.updatedAt | date: 'mediumDate' }}</p>
+            @if (totalTimeMinutes(recipe); as total) {
+              <p class="recipe-card-date">Total: {{ total }} min</p>
+            }
           </div>
           <div class="recipe-card-actions">
             <a
@@ -92,7 +160,7 @@
     </div>
   } @else {
     <div class="recipe-list">
-      @for (recipe of recipes(); track recipe.id) {
+      @for (recipe of sortedRecipes(); track recipe.id) {
         <div class="recipe-list-row">
           <div class="recipe-list-row-main">
             <h3 class="recipe-list-row-title">
@@ -106,6 +174,9 @@
           </div>
           <div class="recipe-list-row-meta">
             <p class="recipe-list-row-date">Updated {{ recipe.updatedAt | date: 'mediumDate' }}</p>
+            @if (totalTimeMinutes(recipe); as total) {
+              <p class="recipe-list-row-date">Total: {{ total }} min</p>
+            }
             <div class="recipe-list-row-actions">
               <a
                 [routerLink]="['/recipes', recipe.id, 'edit']"

@@ -24,6 +24,10 @@
             <app-icon name="pencil" [size]="16" />
             Edit
           </a>
+          <button appButton appearance="secondary" type="button" (click)="cloneRecipe()">
+            <app-icon name="content_copy" [size]="16" />
+            Clone
+          </button>
           <button
             appButton
             appearance="secondary-destructive"
@@ -46,6 +50,9 @@
           <span>Created {{ r.createdAt | date: 'medium' }}</span>
           @if (r.updatedAt !== r.createdAt) {
             <span> · Updated {{ r.updatedAt | date: 'medium' }}</span>
+          }
+          @if (totalTimeMinutes(r); as total) {
+            <span> · Total: {{ total }} min</span>
           }
         </div>
         <hr class="detail-divider" />

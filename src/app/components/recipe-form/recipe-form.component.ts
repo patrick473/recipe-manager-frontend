@@ -27,6 +27,9 @@ import { PropertiesPanelComponent } from '../../shared/properties-panel/properti
  *
  * - When reached via `/recipes/new` (no `:id` param) the form submits POST.
  * - When reached via `/recipes/:id/edit` the form pre-fills from the API and submits PUT.
+ * - When reached via `/recipes/new` with `cloneFrom` in router navigation state (see
+ *   `RecipeDetailComponent.cloneRecipe()`), the form pre-fills from that recipe (title
+ *   suffixed " (Copy)") but still submits POST — `id`/`createdAt`/`updatedAt` are never copied.
  *
  * Validation rules (mirroring the backend):
  *   - `title`   — required, max 255 chars
@@ -120,6 +123,19 @@ export class RecipeFormComponent implements OnInit {
             console.error(err);
           },
         });
+    } else {
+      const cloneFrom = history.state?.cloneFrom as Recipe | undefined;
+      if (cloneFrom) {
+        this.form.patchValue({
+          title: `${cloneFrom.title} (Copy)`,
+          description: cloneFrom.description ?? '',
+          content: cloneFrom.content,
+          tags: cloneFrom.tags ?? [],
+          prepTimeMinutes: cloneFrom.prepTimeMinutes ?? null,
+          cookTimeMinutes: cloneFrom.cookTimeMinutes ?? null,
+          servings: cloneFrom.servings ?? null,
+        });
+      }
     }
   }
 

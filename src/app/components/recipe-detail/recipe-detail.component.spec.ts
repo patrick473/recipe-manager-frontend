@@ -139,6 +139,21 @@ describe('RecipeDetailComponent', () => {
     expect(component['deleting']()).toBe(false);
   });
 
+  it('navigates to /recipes/new with the recipe in router state when cloning', () => {
+    fakeRecipeService.getById.mockReturnValue(of(mockRecipe));
+    configure('1');
+
+    const fixture = TestBed.createComponent(RecipeDetailComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component['cloneRecipe']();
+
+    expect(fakeRouter.navigate).toHaveBeenCalledWith(['/recipes/new'], {
+      state: { cloneFrom: mockRecipe },
+    });
+  });
+
   it('sets error() and clears deleting() on delete failure', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     fakeRecipeService.getById.mockReturnValue(of(mockRecipe));
