@@ -1,0 +1,32 @@
+<div class="md-editor" [class.md-editor--disabled]="disabled()">
+  <div class="md-editor__toolbar">
+    <button
+      type="button"
+      class="md-editor__toolbar-btn"
+      title="Bold (Ctrl/Cmd+B)"
+      [disabled]="disabled() || sourceMode()"
+      (click)="toggleBold()"
+    >
+      <strong>B</strong>
+    </button>
+    <button
+      type="button"
+      class="md-editor__toolbar-btn"
+      title="Italic (Ctrl/Cmd+I)"
+      [disabled]="disabled() || sourceMode()"
+      (click)="toggleItalic()"
+    >
+      <em>I</em>
+    </button>
+    <button
+      type="button"
+      class="md-editor__toolbar-btn md-editor__toolbar-btn--mode"
+      title="Toggle Source/Live Preview mode (Ctrl/Cmd+E)"
+      [disabled]="disabled()"
+      (click)="toggleSourceMode()"
+    >
+      {{ sourceMode() ? 'Live' : 'Source' }}
+    </button>
+  </div>
+  <div #editorHost class="md-editor__host"></div>
+</div>

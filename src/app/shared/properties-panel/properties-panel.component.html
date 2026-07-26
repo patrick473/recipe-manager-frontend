@@ -1,0 +1,113 @@
+<div class="properties-panel">
+  <button
+    type="button"
+    class="properties-toggle"
+    (click)="toggleExpanded()"
+    [attr.aria-expanded]="expanded()"
+  >
+    <app-icon name="expand_more" [size]="18" class="chevron" [class.collapsed]="!expanded()" />
+    <span>Properties</span>
+  </button>
+
+  @if (expanded() && (editable() || hasAnyValue())) {
+    <div class="properties-body">
+      @if (editable() || tags().length > 0) {
+        <div class="properties-row">
+          <span class="properties-label">Tags</span>
+          <div class="properties-value tag-chips">
+            @for (tag of tags(); track tag) {
+              <span class="tag-chip">
+                {{ tag }}
+                @if (editable()) {
+                  <button
+                    type="button"
+                    class="tag-chip-remove"
+                    (click)="removeTag(tag)"
+                    [attr.aria-label]="'Remove tag ' + tag"
+                  >
+                    &times;
+                  </button>
+                }
+              </span>
+            }
+            @if (editable()) {
+              <input
+                type="text"
+                class="tag-input"
+                placeholder="+ tag"
+                [attr.list]="tagSuggestionsListId"
+                [value]="newTagText()"
+                (input)="onNewTagInput($event)"
+                (keydown)="onNewTagKeydown($event)"
+              />
+              <datalist [id]="tagSuggestionsListId">
+                @for (suggestion of filteredSuggestions(); track suggestion) {
+                  <option [value]="suggestion"></option>
+                }
+              </datalist>
+            }
+          </div>
+        </div>
+      }
+
+      @if (editable() || prepTimeMinutes() !== null) {
+        <div class="properties-row">
+          <span class="properties-label">Prep time</span>
+          @if (editable()) {
+            <span class="properties-value">
+              <input
+                type="number"
+                min="0"
+                class="properties-number-input"
+                [value]="prepTimeMinutes()"
+                (input)="onPrepTimeInput($event)"
+              />
+              min
+            </span>
+          } @else {
+            <span class="properties-value">{{ prepTimeMinutes() }} min</span>
+          }
+        </div>
+      }
+
+      @if (editable() || cookTimeMinutes() !== null) {
+        <div class="properties-row">
+          <span class="properties-label">Cook time</span>
+          @if (editable()) {
+            <span class="properties-value">
+              <input
+                type="number"
+                min="0"
+                class="properties-number-input"
+                [value]="cookTimeMinutes()"
+                (input)="onCookTimeInput($event)"
+              />
+              min
+            </span>
+          } @else {
+            <span class="properties-value">{{ cookTimeMinutes() }} min</span>
+          }
+        </div>
+      }
+
+      @if (editable() || servings() !== null) {
+        <div class="properties-row">
+          <span class="properties-label">Servings</span>
+          @if (editable()) {
+            <span class="properties-value">
+              <input
+                type="number"
+                min="0"
+                class="properties-number-input"
+                [value]="servings()"
+                (input)="onServingsInput($event)"
+              />
+            </span>
+          } @else {
+            <span class="properties-value">{{ servings() }}</span>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

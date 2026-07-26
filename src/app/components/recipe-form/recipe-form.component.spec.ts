@@ -11,12 +11,17 @@ const mockRecipe: Recipe = {
   title: 'Pasta Carbonara',
   description: null,
   content: '## Ingredients\n- Pasta\n- Eggs',
+  tags: ['dinner'],
+  prepTimeMinutes: 10,
+  cookTimeMinutes: 20,
+  servings: 2,
   createdAt: '2024-01-01T10:00:00',
   updatedAt: '2024-01-01T10:00:00',
 };
 
 describe('RecipeFormComponent', () => {
   let fakeRecipeService: {
+    getAll: ReturnType<typeof vi.fn>;
     getById: ReturnType<typeof vi.fn>;
     create: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
@@ -43,6 +48,7 @@ describe('RecipeFormComponent', () => {
 
   beforeEach(() => {
     fakeRecipeService = {
+      getAll: vi.fn().mockReturnValue(of([])),
       getById: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
@@ -68,6 +74,10 @@ describe('RecipeFormComponent', () => {
         title: '',
         description: '',
         content: '',
+        tags: [],
+        prepTimeMinutes: null,
+        cookTimeMinutes: null,
+        servings: null,
       });
     });
 
@@ -91,6 +101,10 @@ describe('RecipeFormComponent', () => {
         title: 'New Recipe',
         description: 'A tasty one',
         content: '## Ingredients\n- Salt',
+        tags: [],
+        prepTimeMinutes: null,
+        cookTimeMinutes: null,
+        servings: null,
       });
     });
   });
@@ -127,6 +141,10 @@ describe('RecipeFormComponent', () => {
         title: mockRecipe.title,
         description: 'Updated description',
         content: mockRecipe.content,
+        tags: mockRecipe.tags,
+        prepTimeMinutes: mockRecipe.prepTimeMinutes,
+        cookTimeMinutes: mockRecipe.cookTimeMinutes,
+        servings: mockRecipe.servings,
       });
     });
 
@@ -174,6 +192,15 @@ describe('RecipeFormComponent', () => {
       });
       component['onSubmit']();
 
+      expect(fakeRecipeService.create).toHaveBeenCalledWith({
+        title: 'New Recipe',
+        description: null,
+        content: '## Ingredients\n- Salt',
+        tags: [],
+        prepTimeMinutes: null,
+        cookTimeMinutes: null,
+        servings: null,
+      });
       expect(fakeRouter.navigate).toHaveBeenCalledWith(['/recipes', 42]);
     });
 

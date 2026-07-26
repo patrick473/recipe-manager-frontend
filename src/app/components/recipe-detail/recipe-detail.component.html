@@ -49,6 +49,13 @@
           }
         </div>
         <hr class="detail-divider" />
+        <app-properties-panel
+          [editable]="false"
+          [tags]="r.tags ?? []"
+          [prepTimeMinutes]="r.prepTimeMinutes ?? null"
+          [cookTimeMinutes]="r.cookTimeMinutes ?? null"
+          [servings]="r.servings ?? null"
+        />
         <div class="markdown-body" [innerHTML]="renderedContent()"></div>
       </div>
     </div>

@@ -29,6 +29,30 @@ export interface RecipeResponse {
   description: string | null;
   /** Full recipe body in Markdown format */
   content: string;
+  /**
+     * Optional freeform labels for categorizing and filtering recipes
+     * @maxItems 20
+     * @nullable
+     */
+  tags?: string[] | null;
+  /**
+     * Estimated preparation time in minutes
+     * @minimum 0
+     * @nullable
+     */
+  prepTimeMinutes?: number | null;
+  /**
+     * Estimated cooking time in minutes
+     * @minimum 0
+     * @nullable
+     */
+  cookTimeMinutes?: number | null;
+  /**
+     * Number of servings this recipe yields
+     * @minimum 0
+     * @nullable
+     */
+  servings?: number | null;
   /** UTC timestamp of first creation */
   readonly createdAt: string;
   /** UTC timestamp of last modification */
