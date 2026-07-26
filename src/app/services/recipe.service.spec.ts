@@ -177,6 +177,41 @@ describe('RecipeService', () => {
     });
   });
 
+  describe('uploadImage()', () => {
+    it('posts a FormData body with the file to /recipes/:id/image and returns the updated recipe', () => {
+      const file = new File(['bytes'], 'photo.jpg', { type: 'image/jpeg' });
+      let result: Recipe | undefined;
+
+      service.uploadImage(1, file).subscribe((r) => (result = r));
+
+      const req = httpMock.expectOne((r) => r.url.includes('/recipes/1/image'));
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toBeInstanceOf(FormData);
+      expect((req.request.body as FormData).get('file')).toBe(file);
+
+      const updated: Recipe = { ...mockRecipes[0], imageUrl: '/recipes/1/image' };
+      req.flush(updated);
+
+      expect(result).toEqual(updated);
+    });
+  });
+
+  describe('deleteImage()', () => {
+    it('deletes /recipes/:id/image and returns the updated recipe', () => {
+      let result: Recipe | undefined;
+
+      service.deleteImage(1).subscribe((r) => (result = r));
+
+      const req = httpMock.expectOne((r) => r.url.includes('/recipes/1/image'));
+      expect(req.request.method).toBe('DELETE');
+
+      const updated: Recipe = { ...mockRecipes[0], imageUrl: null };
+      req.flush(updated);
+
+      expect(result).toEqual(updated);
+    });
+  });
+
   describe('deleteWithConfirm()', () => {
     it('emits false and makes no HTTP call when the user cancels', () => {
       const confirmDialogService = TestBed.inject(ConfirmDialogService);

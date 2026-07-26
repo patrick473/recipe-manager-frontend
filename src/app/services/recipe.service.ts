@@ -67,6 +67,16 @@ export class RecipeService {
       .pipe(tap(() => this.recipeCount.update((n) => Math.max(0, n - 1))));
   }
 
+  /** POST /recipes/{id}/image — upload (or replace) a recipe's hero image */
+  uploadImage(id: number, file: File): Observable<Recipe> {
+    return this.api.uploadRecipeImage(id, { file });
+  }
+
+  /** DELETE /recipes/{id}/image — remove a recipe's hero image */
+  deleteImage(id: number): Observable<Recipe> {
+    return this.api.deleteRecipeImage(id);
+  }
+
   /**
    * Shows a confirm dialog for deleting `recipe` and, if confirmed, performs
    * the delete. Invokes `onConfirmed` synchronously right after the user

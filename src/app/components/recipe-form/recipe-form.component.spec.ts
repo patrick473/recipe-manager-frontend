@@ -19,12 +19,20 @@ const mockRecipe: Recipe = {
   updatedAt: '2024-01-01T10:00:00',
 };
 
+function makeFile(name: string, type: string, sizeBytes: number): File {
+  const file = new File(['x'.repeat(Math.min(sizeBytes, 10))], name, { type });
+  Object.defineProperty(file, 'size', { value: sizeBytes });
+  return file;
+}
+
 describe('RecipeFormComponent', () => {
   let fakeRecipeService: {
     getAll: ReturnType<typeof vi.fn>;
     getById: ReturnType<typeof vi.fn>;
     create: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
+    uploadImage: ReturnType<typeof vi.fn>;
+    deleteImage: ReturnType<typeof vi.fn>;
   };
   let fakeRouter: { navigate: ReturnType<typeof vi.fn> };
 
@@ -54,8 +62,13 @@ describe('RecipeFormComponent', () => {
       getById: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      uploadImage: vi.fn(),
+      deleteImage: vi.fn(),
     };
     fakeRouter = { navigate: vi.fn() };
+
+    URL.createObjectURL = vi.fn().mockReturnValue('blob:fake-object-url');
+    URL.revokeObjectURL = vi.fn();
   });
 
   afterEach(() => {
@@ -305,6 +318,131 @@ describe('RecipeFormComponent', () => {
       component['onSubmit']();
 
       expect(component['submitError']()).toBe('Failed to save recipe. Please try again.');
+    });
+  });
+
+  describe('image handling', () => {
+    function selectFile(component: RecipeFormComponent, file: File | undefined): void {
+      const input = { files: file ? [file] : [] } as unknown as HTMLInputElement;
+      component['onFileSelected']({ target: input } as unknown as Event);
+    }
+
+    it('rejects an oversized file: sets imageError, does not set selectedFile, no network call fires', () => {
+      configure(null);
+      const fixture = TestBed.createComponent(RecipeFormComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      const oversized = makeFile('photo.jpg', 'image/jpeg', 6 * 1024 * 1024);
+      selectFile(component, oversized);
+
+      expect(component['imageError']()).toBe('Image must be 5MB or smaller.');
+      expect(component['selectedFile']()).toBeNull();
+      expect(component['imagePreviewUrl']()).toBeNull();
+    });
+
+    it('rejects a wrong-type file: sets imageError, does not set selectedFile, no network call fires', () => {
+      configure(null);
+      const fixture = TestBed.createComponent(RecipeFormComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      const wrongType = makeFile('photo.heic', 'image/heic', 1024);
+      selectFile(component, wrongType);
+
+      expect(component['imageError']()).toBe('Please choose a JPEG, PNG, or WebP image.');
+      expect(component['selectedFile']()).toBeNull();
+      expect(component['imagePreviewUrl']()).toBeNull();
+    });
+
+    it('accepts a valid file: sets selectedFile/imagePreviewUrl and clears imageError/imageRemoved', () => {
+      configure(null);
+      const fixture = TestBed.createComponent(RecipeFormComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      const valid = makeFile('photo.png', 'image/png', 1024);
+      selectFile(component, valid);
+
+      expect(component['imageError']()).toBeNull();
+      expect(component['selectedFile']()).toBe(valid);
+      expect(component['imagePreviewUrl']()).toBe('blob:fake-object-url');
+      expect(component['imageRemoved']()).toBe(false);
+    });
+
+    it('create mode: submitting with a selected file fires create-then-upload in order, navigating only after both settle', () => {
+      const created = { ...mockRecipe, id: 42 };
+      fakeRecipeService.create.mockReturnValue(of(created));
+      fakeRecipeService.uploadImage.mockReturnValue(
+        of({ ...created, imageUrl: '/recipes/42/image' }),
+      );
+      configure(null);
+
+      const fixture = TestBed.createComponent(RecipeFormComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      component['form'].patchValue({
+        title: 'New Recipe',
+        content: '## Ingredients\n- Salt',
+      });
+      const file = makeFile('photo.png', 'image/png', 1024);
+      selectFile(component, file);
+
+      component['onSubmit']();
+
+      expect(fakeRecipeService.create).toHaveBeenCalled();
+      expect(fakeRecipeService.uploadImage).toHaveBeenCalledWith(42, file);
+      expect(fakeRouter.navigate).toHaveBeenCalledWith(['/recipes', 42]);
+    });
+
+    it('edit mode: clicking "Remove image" then submitting fires update-then-delete', () => {
+      fakeRecipeService.getById.mockReturnValue(
+        of({ ...mockRecipe, imageUrl: '/recipes/5/image' }),
+      );
+      fakeRecipeService.update.mockReturnValue(of({ ...mockRecipe, id: 5 }));
+      fakeRecipeService.deleteImage.mockReturnValue(of({ ...mockRecipe, id: 5, imageUrl: null }));
+      configure('5');
+
+      const fixture = TestBed.createComponent(RecipeFormComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      expect(component['imagePreviewUrl']()).toContain('/recipes/5/image');
+
+      component['onRemoveImage']();
+      component['onSubmit']();
+
+      expect(fakeRecipeService.update).toHaveBeenCalled();
+      expect(fakeRecipeService.deleteImage).toHaveBeenCalledWith(5);
+      expect(fakeRecipeService.uploadImage).not.toHaveBeenCalled();
+      expect(fakeRouter.navigate).toHaveBeenCalledWith(['/recipes', 5]);
+    });
+
+    it('create mode: a failed image upload still navigates to the created recipe rather than showing a generic submit error', () => {
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const created = { ...mockRecipe, id: 42 };
+      fakeRecipeService.create.mockReturnValue(of(created));
+      fakeRecipeService.uploadImage.mockReturnValue(throwError(() => ({ status: 500 })));
+      configure(null);
+
+      const fixture = TestBed.createComponent(RecipeFormComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      component['form'].patchValue({
+        title: 'New Recipe',
+        content: '## Ingredients\n- Salt',
+      });
+      const file = makeFile('photo.png', 'image/png', 1024);
+      selectFile(component, file);
+
+      component['onSubmit']();
+
+      expect(fakeRouter.navigate).toHaveBeenCalledWith(['/recipes', 42], {
+        state: { imageUploadFailed: true },
+      });
+      expect(component['submitError']()).toBeNull();
     });
   });
 

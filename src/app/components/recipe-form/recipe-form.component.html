@@ -56,6 +56,36 @@
         />
       </div>
 
+      <!-- Image -->
+      <div class="field">
+        <label class="field-label" for="image"
+          >Image <span class="optional-label">(optional)</span></label
+        >
+        <div class="image-field">
+          @if (imagePreviewUrl()) {
+            <img class="image-preview" [src]="imagePreviewUrl()" alt="Recipe image preview" />
+          } @else {
+            <div class="image-preview image-preview-empty">No image selected</div>
+          }
+          <div class="image-field-controls">
+            <input
+              id="image"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              (change)="onFileSelected($event)"
+            />
+            @if (imagePreviewUrl()) {
+              <button appButton appearance="secondary" type="button" (click)="onRemoveImage()">
+                Remove image
+              </button>
+            }
+          </div>
+        </div>
+        @if (imageError()) {
+          <p class="field-error">{{ imageError() }}</p>
+        }
+      </div>
+
       <!-- Tags & Properties -->
       <app-properties-panel
         [editable]="true"

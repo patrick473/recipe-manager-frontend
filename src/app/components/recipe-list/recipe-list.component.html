@@ -119,6 +119,13 @@
     <div class="recipe-grid">
       @for (recipe of recipes(); track recipe.id) {
         <div class="card recipe-card">
+          @if (resolveImageUrl(recipe.imageUrl); as thumbSrc) {
+            <img class="recipe-card-thumb" [src]="thumbSrc" [alt]="recipe.title" />
+          } @else {
+            <div class="recipe-card-thumb image-placeholder">
+              <app-icon name="image" [size]="28" />
+            </div>
+          }
           <div class="recipe-card-body">
             <h3 class="recipe-card-title">
               <a [routerLink]="['/recipes', recipe.id]">{{ recipe.title }}</a>
@@ -162,6 +169,13 @@
     <div class="recipe-list">
       @for (recipe of recipes(); track recipe.id) {
         <div class="recipe-list-row">
+          @if (resolveImageUrl(recipe.imageUrl); as thumbSrc) {
+            <img class="recipe-list-row-thumb" [src]="thumbSrc" [alt]="recipe.title" />
+          } @else {
+            <div class="recipe-list-row-thumb image-placeholder image-placeholder-sm">
+              <app-icon name="image" [size]="16" />
+            </div>
+          }
           <div class="recipe-list-row-main">
             <h3 class="recipe-list-row-title">
               <a [routerLink]="['/recipes', recipe.id]">{{ recipe.title }}</a>

@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  OnDestroy,
   OnInit,
   inject,
   signal,
@@ -15,12 +16,17 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { of, switchMap } from 'rxjs';
 import { Recipe } from '../../models/recipe.model';
 import { RecipeService } from '../../services/recipe.service';
 import { ButtonDirective } from '../../shared/button.directive';
+import { resolveImageUrl } from '../../shared/image-url.util';
 import { LoaderComponent } from '../../shared/loader/loader.component';
 import { MarkdownEditorComponent } from '../../shared/markdown-editor/markdown-editor.component';
 import { PropertiesPanelComponent } from '../../shared/properties-panel/properties-panel.component';
+
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 /**
  * Shared create/edit form for recipes.
@@ -51,7 +57,7 @@ import { PropertiesPanelComponent } from '../../shared/properties-panel/properti
   styleUrl: './recipe-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RecipeFormComponent implements OnInit {
+export class RecipeFormComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -84,6 +90,16 @@ export class RecipeFormComponent implements OnInit {
   protected readonly submitError = signal<string | null>(null);
   protected readonly tagSuggestions = signal<string[]>([]);
 
+  protected readonly selectedFile = signal<File | null>(null);
+  protected readonly imagePreviewUrl = signal<string | null>(null);
+  protected readonly imageRemoved = signal(false);
+  protected readonly imageError = signal<string | null>(null);
+
+  // Tracks the object URL created via URL.createObjectURL() so it can be
+  // revoked on re-selection/destroy. Never holds a resolveImageUrl() (server)
+  // URL — those aren't ours to revoke.
+  private createdObjectUrl: string | null = null;
+
   ngOnInit(): void {
     this.recipeService
       // size: 100 is the backend's max page size — the closest approximation
@@ -108,6 +124,7 @@ export class RecipeFormComponent implements OnInit {
         .subscribe({
           next: (data) => {
             this.recipe.set(data);
+            this.imagePreviewUrl.set(resolveImageUrl(data.imageUrl));
             this.form.patchValue({
               title: data.title,
               description: data.description ?? '',
@@ -163,28 +180,106 @@ export class RecipeFormComponent implements OnInit {
     this.submitError.set(null);
 
     const currentRecipe = this.recipe();
-    const save$ =
-      this.isEdit() && currentRecipe
-        ? this.recipeService.update(currentRecipe.id, request)
-        : this.recipeService.create(request);
+    const wasEdit = this.isEdit() && !!currentRecipe;
+    const save$ = wasEdit
+      ? this.recipeService.update(currentRecipe.id, request)
+      : this.recipeService.create(request);
 
-    save$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (saved) => {
-        this.router.navigate(['/recipes', saved.id]);
-      },
-      error: (err) => {
-        if (err.status === 400 && err.error?.errors) {
-          const msgs = Object.entries(err.error.errors)
-            .map(([f, m]) => `${f}: ${m}`)
-            .join('; ');
-          this.submitError.set(`Validation failed — ${msgs}`);
-        } else {
-          this.submitError.set('Failed to save recipe. Please try again.');
-        }
-        this.submitting.set(false);
-        console.error(err);
-      },
-    });
+    // Set once the JSON create/update succeeds, so the error handler can tell
+    // "the recipe itself failed to save" apart from "the recipe saved fine,
+    // but the follow-up image call failed" — the latter needs different
+    // handling in create mode (see below).
+    let savedRecipeId: number | null = null;
+
+    save$
+      .pipe(
+        switchMap((saved) => {
+          savedRecipeId = saved.id;
+          const file = this.selectedFile();
+          if (file) {
+            return this.recipeService.uploadImage(saved.id, file);
+          }
+          if (this.imageRemoved()) {
+            return this.recipeService.deleteImage(saved.id);
+          }
+          return of(saved);
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (saved) => {
+          this.router.navigate(['/recipes', saved.id]);
+        },
+        error: (err) => {
+          if (!wasEdit && savedRecipeId !== null) {
+            // Create mode: the JSON POST already succeeded, so the recipe
+            // exists — only the follow-up image call failed. Retrying the
+            // whole submit would create a duplicate recipe, so navigate to
+            // the newly-created recipe instead of surfacing a blocking error.
+            console.error(err);
+            this.router.navigate(['/recipes', savedRecipeId], {
+              state: { imageUploadFailed: true },
+            });
+            return;
+          }
+          if (err.status === 400 && err.error?.errors) {
+            const msgs = Object.entries(err.error.errors)
+              .map(([f, m]) => `${f}: ${m}`)
+              .join('; ');
+            this.submitError.set(`Validation failed — ${msgs}`);
+          } else {
+            this.submitError.set('Failed to save recipe. Please try again.');
+          }
+          this.submitting.set(false);
+          console.error(err);
+        },
+      });
+  }
+
+  protected onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      this.imageError.set('Please choose a JPEG, PNG, or WebP image.');
+      input.value = '';
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      this.imageError.set('Image must be 5MB or smaller.');
+      input.value = '';
+      return;
+    }
+
+    this.revokeCreatedObjectUrl();
+    const objectUrl = URL.createObjectURL(file);
+    this.createdObjectUrl = objectUrl;
+
+    this.selectedFile.set(file);
+    this.imagePreviewUrl.set(objectUrl);
+    this.imageError.set(null);
+    this.imageRemoved.set(false);
+  }
+
+  protected onRemoveImage(): void {
+    this.revokeCreatedObjectUrl();
+    this.selectedFile.set(null);
+    this.imagePreviewUrl.set(null);
+    this.imageRemoved.set(true);
+  }
+
+  ngOnDestroy(): void {
+    this.revokeCreatedObjectUrl();
+  }
+
+  private revokeCreatedObjectUrl(): void {
+    if (this.createdObjectUrl) {
+      URL.revokeObjectURL(this.createdObjectUrl);
+      this.createdObjectUrl = null;
+    }
   }
 
   protected isInvalid(field: string): boolean {

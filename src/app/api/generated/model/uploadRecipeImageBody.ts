@@ -10,10 +10,7 @@
  * OpenAPI spec version: 0.0.1
  */
 
-export * from './listRecipesParams';
-export * from './problemDetail';
-export * from './problemDetailErrors';
-export * from './recipePageResponse';
-export * from './recipeRequest';
-export * from './recipeResponse';
-export * from './uploadRecipeImageBody';
+export type UploadRecipeImageBody = {
+  /** The image file (jpeg, png, or webp) */
+  file: Blob;
+};
