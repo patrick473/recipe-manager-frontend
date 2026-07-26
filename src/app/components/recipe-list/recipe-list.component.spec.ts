@@ -32,6 +32,8 @@ describe('RecipeListComponent', () => {
   };
 
   beforeEach(() => {
+    localStorage.clear();
+
     fakeRecipeService = {
       getAll: vi.fn(),
       deleteWithConfirm: vi.fn(),
@@ -158,5 +160,129 @@ describe('RecipeListComponent', () => {
 
     expect(component['error']()).toBe(`Failed to delete "${mockRecipes[0].title}".`);
     expect(component['deleting']()).toBe(null);
+  });
+
+  describe('view modes', () => {
+    function createFixtureInMode(mode: 'grid' | 'list') {
+      localStorage.setItem('recipeListViewMode', mode);
+      fakeRecipeService.getAll.mockReturnValue(of(mockRecipes));
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      fixture.detectChanges();
+      return fixture;
+    }
+
+    function findDeleteButton(element: HTMLElement): HTMLButtonElement {
+      const button = Array.from(element.querySelectorAll('button')).find(
+        (btn) => btn.textContent?.includes('Delete') && !btn.textContent.includes('Deleting'),
+      );
+      if (!button) {
+        throw new Error('Delete button not found');
+      }
+      return button as HTMLButtonElement;
+    }
+
+    function findEditLink(element: HTMLElement): HTMLAnchorElement {
+      const link = Array.from(element.querySelectorAll('a')).find((a) =>
+        a.textContent?.includes('Edit'),
+      );
+      if (!link) {
+        throw new Error('Edit link not found');
+      }
+      return link as HTMLAnchorElement;
+    }
+
+    it('defaults to grid mode when localStorage has no stored preference', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(mockRecipes));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      fixture.detectChanges();
+
+      const element = fixture.nativeElement as HTMLElement;
+      expect(element.querySelector('.recipe-grid')).toBeTruthy();
+      expect(element.querySelector('.recipe-list')).toBeNull();
+    });
+
+    it('switches to list markup on toggle click and persists the choice to localStorage, surviving a fresh component instance', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(mockRecipes));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      fixture.detectChanges();
+
+      const listToggle = fixture.nativeElement.querySelector(
+        'button[aria-label="List view"]',
+      ) as HTMLButtonElement;
+      listToggle.click();
+      fixture.detectChanges();
+
+      const element = fixture.nativeElement as HTMLElement;
+      expect(element.querySelector('.recipe-list')).toBeTruthy();
+      expect(element.querySelector('.recipe-grid')).toBeNull();
+      expect(localStorage.getItem('recipeListViewMode')).toBe('list');
+
+      const reloadedFixture = TestBed.createComponent(RecipeListComponent);
+      reloadedFixture.detectChanges();
+
+      expect(
+        (reloadedFixture.nativeElement as HTMLElement).querySelector('.recipe-list'),
+      ).toBeTruthy();
+    });
+
+    it('reflects viewMode() in aria-pressed on the toggle buttons, flipping after a click', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(mockRecipes));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      fixture.detectChanges();
+
+      const element = fixture.nativeElement as HTMLElement;
+      const gridToggle = element.querySelector(
+        'button[aria-label="Grid view"]',
+      ) as HTMLButtonElement;
+      const listToggle = element.querySelector(
+        'button[aria-label="List view"]',
+      ) as HTMLButtonElement;
+
+      expect(gridToggle.getAttribute('aria-pressed')).toBe('true');
+      expect(listToggle.getAttribute('aria-pressed')).toBe('false');
+
+      listToggle.click();
+      fixture.detectChanges();
+
+      expect(gridToggle.getAttribute('aria-pressed')).toBe('false');
+      expect(listToggle.getAttribute('aria-pressed')).toBe('true');
+    });
+
+    describe.each(['grid', 'list'] as const)('delete/edit DOM wiring in %s mode', (mode) => {
+      it('clicking Delete calls through the service and removes the recipe from recipes()', () => {
+        const delete$ = new Subject<boolean>();
+        fakeRecipeService.deleteWithConfirm.mockImplementation(
+          (recipe: Recipe, onConfirmed?: () => void) => {
+            onConfirmed?.();
+            return delete$.asObservable();
+          },
+        );
+
+        const fixture = createFixtureInMode(mode);
+        const component = fixture.componentInstance;
+
+        findDeleteButton(fixture.nativeElement).click();
+        delete$.next(true);
+        delete$.complete();
+        fixture.detectChanges();
+
+        expect(fakeRecipeService.deleteWithConfirm).toHaveBeenCalledWith(
+          mockRecipes[0],
+          expect.any(Function),
+        );
+        expect(component['recipes']()).toEqual([mockRecipes[1]]);
+      });
+
+      it('renders an Edit link pointing at the recipe edit route', () => {
+        const fixture = createFixtureInMode(mode);
+
+        const editLink = findEditLink(fixture.nativeElement);
+
+        expect(editLink.getAttribute('href')).toBe(`/recipes/${mockRecipes[0].id}/edit`);
+      });
+    });
   });
 });

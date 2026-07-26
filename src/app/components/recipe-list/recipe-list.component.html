@@ -1,5 +1,33 @@
 <div class="recipe-list-header">
   <h2>Recipes</h2>
+  <div class="view-toggle">
+    <button
+      type="button"
+      appButton
+      appearance="secondary"
+      size="s"
+      [iconOnly]="true"
+      [class.active]="viewMode() === 'grid'"
+      [attr.aria-pressed]="viewMode() === 'grid'"
+      aria-label="Grid view"
+      (click)="setViewMode('grid')"
+    >
+      <app-icon name="grid_view" [size]="16" />
+    </button>
+    <button
+      type="button"
+      appButton
+      appearance="secondary"
+      size="s"
+      [iconOnly]="true"
+      [class.active]="viewMode() === 'list'"
+      [attr.aria-pressed]="viewMode() === 'list'"
+      aria-label="List view"
+      (click)="setViewMode('list')"
+    >
+      <app-icon name="view_list" [size]="16" />
+    </button>
+  </div>
 </div>
 
 @if (error()) {
@@ -22,43 +50,87 @@
 }
 
 @if (!loading() && recipes().length > 0) {
-  <div class="recipe-grid">
-    @for (recipe of recipes(); track recipe.id) {
-      <div class="card recipe-card">
-        <div class="recipe-card-body">
-          <h3 class="recipe-card-title">
-            <a [routerLink]="['/recipes', recipe.id]">{{ recipe.title }}</a>
-          </h3>
-          @if (recipe.description) {
-            <p class="recipe-card-description">{{ recipe.description }}</p>
-          } @else {
-            <p class="recipe-card-description muted">No description</p>
-          }
-          <p class="recipe-card-date">Updated {{ recipe.updatedAt | date: 'mediumDate' }}</p>
+  @if (viewMode() === 'grid') {
+    <div class="recipe-grid">
+      @for (recipe of recipes(); track recipe.id) {
+        <div class="card recipe-card">
+          <div class="recipe-card-body">
+            <h3 class="recipe-card-title">
+              <a [routerLink]="['/recipes', recipe.id]">{{ recipe.title }}</a>
+            </h3>
+            @if (recipe.description) {
+              <p class="recipe-card-description">{{ recipe.description }}</p>
+            } @else {
+              <p class="recipe-card-description muted">No description</p>
+            }
+            <p class="recipe-card-date">Updated {{ recipe.updatedAt | date: 'mediumDate' }}</p>
+          </div>
+          <div class="recipe-card-actions">
+            <a
+              [routerLink]="['/recipes', recipe.id, 'edit']"
+              appButton
+              appearance="secondary"
+              size="s"
+            >
+              <app-icon name="pencil" [size]="14" />
+              Edit
+            </a>
+            <button
+              appButton
+              appearance="secondary-destructive"
+              size="s"
+              type="button"
+              (click)="deleteRecipe(recipe)"
+              [disabled]="deleting() === recipe.id"
+            >
+              <app-icon name="trash" [size]="14" />
+              {{ deleting() === recipe.id ? 'Deleting…' : 'Delete' }}
+            </button>
+          </div>
         </div>
-        <div class="recipe-card-actions">
-          <a
-            [routerLink]="['/recipes', recipe.id, 'edit']"
-            appButton
-            appearance="secondary"
-            size="s"
-          >
-            <app-icon name="pencil" [size]="14" />
-            Edit
-          </a>
-          <button
-            appButton
-            appearance="secondary-destructive"
-            size="s"
-            type="button"
-            (click)="deleteRecipe(recipe)"
-            [disabled]="deleting() === recipe.id"
-          >
-            <app-icon name="trash" [size]="14" />
-            {{ deleting() === recipe.id ? 'Deleting…' : 'Delete' }}
-          </button>
+      }
+    </div>
+  } @else {
+    <div class="recipe-list">
+      @for (recipe of recipes(); track recipe.id) {
+        <div class="recipe-list-row">
+          <div class="recipe-list-row-main">
+            <h3 class="recipe-list-row-title">
+              <a [routerLink]="['/recipes', recipe.id]">{{ recipe.title }}</a>
+            </h3>
+            @if (recipe.description) {
+              <p class="recipe-list-row-description">{{ recipe.description }}</p>
+            } @else {
+              <p class="recipe-list-row-description muted">No description</p>
+            }
+          </div>
+          <div class="recipe-list-row-meta">
+            <p class="recipe-list-row-date">Updated {{ recipe.updatedAt | date: 'mediumDate' }}</p>
+            <div class="recipe-list-row-actions">
+              <a
+                [routerLink]="['/recipes', recipe.id, 'edit']"
+                appButton
+                appearance="secondary"
+                size="s"
+              >
+                <app-icon name="pencil" [size]="14" />
+                Edit
+              </a>
+              <button
+                appButton
+                appearance="secondary-destructive"
+                size="s"
+                type="button"
+                (click)="deleteRecipe(recipe)"
+                [disabled]="deleting() === recipe.id"
+              >
+                <app-icon name="trash" [size]="14" />
+                {{ deleting() === recipe.id ? 'Deleting…' : 'Delete' }}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    }
-  </div>
+      }
+    </div>
+  }
 }
