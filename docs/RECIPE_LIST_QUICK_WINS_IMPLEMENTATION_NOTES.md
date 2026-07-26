@@ -20,7 +20,7 @@ which files, since that determines what can safely run in parallel:
   Part 5's "no matches" state depends on) — one agent, sequentially.
 - Part 4 (clone) is fully independent, touching only
   `RecipeDetailComponent`/`RecipeFormComponent`.
-- Part 3 (total time) was the odd one out: small and independent in *logic*,
+- Part 3 (total time) was the odd one out: small and independent in _logic_,
   but its template changes land in **both** `recipe-list.component.html` and
   `recipe-detail.component.html` — the same two files the other two tracks
   were about to edit.
@@ -64,7 +64,7 @@ controls to match the button box model.
 ## Lessons Learned
 
 **Map file overlap across spec parts before deciding what to parallelize —
-not just logical dependency.** Parts 1/2/5 and Part 4 had no *logical*
+not just logical dependency.** Parts 1/2/5 and Part 4 had no _logical_
 dependency on Part 3, but two of the three tracks physically touched the same
 two template files. Dependency graphs based only on "does this feature need
 that feature's data" miss this; the actual constraint for safe subagent

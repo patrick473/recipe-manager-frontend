@@ -457,8 +457,7 @@ describe('RecipeListComponent', () => {
       ]);
 
       const breakfastChip = chips.find((c) => c.textContent?.trim() === 'breakfast') as
-        | HTMLButtonElement
-        | undefined;
+        HTMLButtonElement | undefined;
       expect(breakfastChip?.getAttribute('aria-pressed')).toBe('false');
 
       breakfastChip?.click();

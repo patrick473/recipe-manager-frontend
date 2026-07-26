@@ -33,7 +33,7 @@ ingredients/steps — all separately tracked further down the backlog.
 
 - A toolbar row in `RecipeListComponent`, alongside the existing grid/list toggle: a text `<input type="search">` (placeholder "Search recipes…") plus a row of toggleable tag chips — one per distinct tag across all loaded recipes.
 - Search matches case-insensitive substring against `title` and `description`.
-- Tag chips use **OR** semantics among themselves (selecting "breakfast" and "quick" shows recipes with *either* tag), intersected with the search text using **AND** (must match search text and at least one selected tag, if any are selected).
+- Tag chips use **OR** semantics among themselves (selecting "breakfast" and "quick" shows recipes with _either_ tag), intersected with the search text using **AND** (must match search text and at least one selected tag, if any are selected).
 - If no recipe has any tags, the tag-chip row doesn't render — nothing to filter by.
 - Purely a computed filter over the already-fetched `recipes()` signal — no new HTTP calls, no debounce needed (it's an in-memory array scan, not a network request).
 - Both grid and list view modes (Part of `RECIPE_LIST_VIEW_MODES_SPEC.md`) read from the same filtered result, so filtering behaves identically regardless of `viewMode()`.
@@ -131,7 +131,7 @@ Same files as Part 1 (`recipe-list.component.ts`/`.html`/`.scss`/`.spec.ts`) —
 
 - Audit and tighten (not redesign) the non-happy-path states already coded in `RecipeListComponent`:
   - **Empty, no recipes at all** — today's `.empty-state` (heading + copy + "New Recipe" CTA). Confirm it still looks right in both grid and list view mode and alongside the new toolbar from Parts 1–2.
-  - **Empty, filtered to zero results** — a *new* state, introduced by Part 1: distinct copy ("No recipes match your search." + a "Clear filters" button) rather than reusing the "create your first recipe" messaging, since the fix here is adjusting the filter, not adding data.
+  - **Empty, filtered to zero results** — a _new_ state, introduced by Part 1: distinct copy ("No recipes match your search." + a "Clear filters" button) rather than reusing the "create your first recipe" messaging, since the fix here is adjusting the filter, not adding data.
   - **Error banner** (`.notification-negative`, "Failed to load recipes. Is the backend running?") — confirm contrast/spacing in both light and dark theme (`ThemeService`'s `data-theme` toggle) and that it doesn't visually collide with the new toolbar.
 - Same triage on `RecipeDetailComponent`'s and `RecipeFormComponent`'s equivalent banners (404 "not found", load/submit failures) for consistency — they share the same `.notification-negative` class ([_utilities.scss](../src/styles/_utilities.scss)), so a single fix there likely covers all three components.
 
