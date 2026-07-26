@@ -72,7 +72,7 @@
               appearance="secondary"
               size="s"
             >
-              <app-icon name="pencil" [size]="14" />
+              <app-icon name="edit" [size]="14" />
               Edit
             </a>
             <button
@@ -83,7 +83,7 @@
               (click)="deleteRecipe(recipe)"
               [disabled]="deleting() === recipe.id"
             >
-              <app-icon name="trash" [size]="14" />
+              <app-icon name="delete" [size]="14" />
               {{ deleting() === recipe.id ? 'Deleting…' : 'Delete' }}
             </button>
           </div>
@@ -113,7 +113,7 @@
                 appearance="secondary"
                 size="s"
               >
-                <app-icon name="pencil" [size]="14" />
+                <app-icon name="edit" [size]="14" />
                 Edit
               </a>
               <button
@@ -124,7 +124,7 @@
                 (click)="deleteRecipe(recipe)"
                 [disabled]="deleting() === recipe.id"
               >
-                <app-icon name="trash" [size]="14" />
+                <app-icon name="delete" [size]="14" />
                 {{ deleting() === recipe.id ? 'Deleting…' : 'Delete' }}
               </button>
             </div>
