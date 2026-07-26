@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Recipe } from '../../models/recipe.model';
+import { Recipe, RecipePageResponse } from '../../models/recipe.model';
 import { RecipeService } from '../../services/recipe.service';
 import { RecipeListComponent } from './recipe-list.component';
 
@@ -55,38 +55,25 @@ const taggedRecipes: Recipe[] = [
   },
 ];
 
-const sortableRecipes: Recipe[] = [
-  {
-    id: 1,
-    title: 'Banana Bread',
-    description: null,
-    content: '## Ingredients\n- Bananas',
-    prepTimeMinutes: 10,
-    cookTimeMinutes: 45,
-    createdAt: '2024-01-03T00:00:00',
-    updatedAt: '2024-01-05T00:00:00',
-  },
-  {
-    id: 2,
-    title: 'Apple Pie',
-    description: null,
-    content: '## Ingredients\n- Apples',
-    prepTimeMinutes: null,
-    cookTimeMinutes: 30,
-    createdAt: '2024-01-01T00:00:00',
-    updatedAt: '2024-01-04T00:00:00',
-  },
-  {
-    id: 3,
-    title: 'Carrot Cake',
-    description: null,
-    content: '## Ingredients\n- Carrots',
-    prepTimeMinutes: 20,
-    cookTimeMinutes: null,
-    createdAt: '2024-01-02T00:00:00',
-    updatedAt: '2024-01-06T00:00:00',
-  },
-];
+/** Builds a `RecipePageResponse` envelope around `content`, with sane single-page defaults. */
+function toPage(
+  content: Recipe[],
+  overrides: Partial<RecipePageResponse> = {},
+): RecipePageResponse {
+  return {
+    content,
+    page: 0,
+    size: 20,
+    totalElements: content.length,
+    totalPages: 1,
+    ...overrides,
+  };
+}
+
+/** A fake ActivatedRoute exposing only the query-param snapshot the component reads on init. */
+function routeWithQueryParams(params: Record<string, string>): ActivatedRoute {
+  return { snapshot: { queryParamMap: convertToParamMap(params) } } as ActivatedRoute;
+}
 
 describe('RecipeListComponent', () => {
   let fakeRecipeService: {
@@ -118,7 +105,7 @@ describe('RecipeListComponent', () => {
   });
 
   it('loads recipes into recipes() and flips loading() to false on init', () => {
-    fakeRecipeService.getAll.mockReturnValue(of(mockRecipes));
+    fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
 
     const fixture = TestBed.createComponent(RecipeListComponent);
     const component = fixture.componentInstance;
@@ -127,6 +114,20 @@ describe('RecipeListComponent', () => {
 
     expect(component['recipes']()).toEqual(mockRecipes);
     expect(component['loading']()).toBe(false);
+  });
+
+  it('requests the default q/tags/sort/page on first load', () => {
+    fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
+
+    const fixture = TestBed.createComponent(RecipeListComponent);
+    fixture.detectChanges();
+
+    expect(fakeRecipeService.getAll).toHaveBeenCalledWith({
+      q: undefined,
+      tags: undefined,
+      sort: 'title,asc',
+      page: 0,
+    });
   });
 
   it('sets error() and loading(false) when loading recipes fails', () => {
@@ -143,7 +144,7 @@ describe('RecipeListComponent', () => {
   });
 
   it('removes the recipe from recipes() when the delete is confirmed', () => {
-    fakeRecipeService.getAll.mockReturnValue(of(mockRecipes));
+    fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
     const delete$ = new Subject<boolean>();
     fakeRecipeService.deleteWithConfirm.mockImplementation(
       (recipe: Recipe, onConfirmed?: () => void) => {
@@ -164,7 +165,7 @@ describe('RecipeListComponent', () => {
   });
 
   it('leaves recipes() unchanged when the delete is cancelled', () => {
-    fakeRecipeService.getAll.mockReturnValue(of(mockRecipes));
+    fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
     const delete$ = new Subject<boolean>();
     fakeRecipeService.deleteWithConfirm.mockReturnValue(delete$.asObservable());
 
@@ -180,7 +181,7 @@ describe('RecipeListComponent', () => {
   });
 
   it('sets deleting() to the recipe id while the delete is in flight', () => {
-    fakeRecipeService.getAll.mockReturnValue(of(mockRecipes));
+    fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
     const delete$ = new Subject<boolean>();
     fakeRecipeService.deleteWithConfirm.mockImplementation(
       (recipe: Recipe, onConfirmed?: () => void) => {
@@ -205,7 +206,7 @@ describe('RecipeListComponent', () => {
 
   it('sets error() with the recipe title and clears deleting() on delete failure', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    fakeRecipeService.getAll.mockReturnValue(of(mockRecipes));
+    fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
     const delete$ = new Subject<boolean>();
     fakeRecipeService.deleteWithConfirm.mockImplementation(
       (recipe: Recipe, onConfirmed?: () => void) => {
@@ -228,7 +229,7 @@ describe('RecipeListComponent', () => {
   describe('view modes', () => {
     function createFixtureInMode(mode: 'grid' | 'list') {
       localStorage.setItem('recipeListViewMode', mode);
-      fakeRecipeService.getAll.mockReturnValue(of(mockRecipes));
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
       const fixture = TestBed.createComponent(RecipeListComponent);
       fixture.detectChanges();
       return fixture;
@@ -255,7 +256,7 @@ describe('RecipeListComponent', () => {
     }
 
     it('defaults to grid mode when localStorage has no stored preference', () => {
-      fakeRecipeService.getAll.mockReturnValue(of(mockRecipes));
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
 
       const fixture = TestBed.createComponent(RecipeListComponent);
       fixture.detectChanges();
@@ -266,7 +267,7 @@ describe('RecipeListComponent', () => {
     });
 
     it('switches to list markup on toggle click and persists the choice to localStorage, surviving a fresh component instance', () => {
-      fakeRecipeService.getAll.mockReturnValue(of(mockRecipes));
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
 
       const fixture = TestBed.createComponent(RecipeListComponent);
       fixture.detectChanges();
@@ -291,7 +292,7 @@ describe('RecipeListComponent', () => {
     });
 
     it('reflects viewMode() in aria-pressed on the toggle buttons, flipping after a click', () => {
-      fakeRecipeService.getAll.mockReturnValue(of(mockRecipes));
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
 
       const fixture = TestBed.createComponent(RecipeListComponent);
       fixture.detectChanges();
@@ -315,10 +316,10 @@ describe('RecipeListComponent', () => {
     });
 
     describe.each(['grid', 'list'] as const)('delete/edit DOM wiring in %s mode', (mode) => {
-      // Default sort is title-ascending, so "Banana Bread" (mockRecipes[1])
-      // renders before "Pasta Carbonara" (mockRecipes[0]).
-      const sortedFirst = mockRecipes[1];
-      const sortedSecond = mockRecipes[0];
+      // recipes() renders in whatever order the (mocked) server response
+      // returns — no client-side sort is applied anymore.
+      const firstRecipe = mockRecipes[0];
+      const secondRecipe = mockRecipes[1];
 
       it('clicking Delete calls through the service and removes the recipe from recipes()', () => {
         const delete$ = new Subject<boolean>();
@@ -338,10 +339,10 @@ describe('RecipeListComponent', () => {
         fixture.detectChanges();
 
         expect(fakeRecipeService.deleteWithConfirm).toHaveBeenCalledWith(
-          sortedFirst,
+          firstRecipe,
           expect.any(Function),
         );
-        expect(component['recipes']()).toEqual([sortedSecond]);
+        expect(component['recipes']()).toEqual([secondRecipe]);
       });
 
       it('renders an Edit link pointing at the recipe edit route', () => {
@@ -349,284 +350,108 @@ describe('RecipeListComponent', () => {
 
         const editLink = findEditLink(fixture.nativeElement);
 
-        expect(editLink.getAttribute('href')).toBe(`/recipes/${sortedFirst.id}/edit`);
+        expect(editLink.getAttribute('href')).toBe(`/recipes/${firstRecipe.id}/edit`);
       });
     });
   });
 
-  describe('search & tag filtering', () => {
-    function createFixtureWithTaggedRecipes() {
-      fakeRecipeService.getAll.mockReturnValue(of(taggedRecipes));
+  describe('search debounce', () => {
+    it('does not refetch immediately on a search keystroke, only after 300ms of quiet', async () => {
+      vi.useFakeTimers();
+      try {
+        fakeRecipeService.getAll.mockReturnValue(of(toPage(taggedRecipes)));
+
+        const fixture = TestBed.createComponent(RecipeListComponent);
+        const component = fixture.componentInstance;
+        fixture.detectChanges();
+
+        fakeRecipeService.getAll.mockClear();
+
+        component['searchText'].set('omelette');
+        fixture.detectChanges();
+
+        expect(fakeRecipeService.getAll).not.toHaveBeenCalled();
+
+        await vi.advanceTimersByTimeAsync(299);
+        expect(fakeRecipeService.getAll).not.toHaveBeenCalled();
+
+        await vi.advanceTimersByTimeAsync(1);
+        expect(fakeRecipeService.getAll).toHaveBeenCalledTimes(1);
+        expect(fakeRecipeService.getAll).toHaveBeenCalledWith(
+          expect.objectContaining({ q: 'omelette' }),
+        );
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('resets page() to 0 immediately (before the debounced refetch) when the search text changes', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(taggedRecipes, { totalPages: 3 })));
+
       const fixture = TestBed.createComponent(RecipeListComponent);
-      fixture.detectChanges();
-      return fixture;
-    }
-
-    it('filters by title substring, case-insensitively', () => {
-      const fixture = createFixtureWithTaggedRecipes();
       const component = fixture.componentInstance;
-
-      component['searchText'].set('OMELE');
-
-      expect(component['filteredRecipes']()).toEqual([taggedRecipes[1]]);
-    });
-
-    it('filters by description substring, case-insensitively', () => {
-      const fixture = createFixtureWithTaggedRecipes();
-      const component = fixture.componentInstance;
-
-      component['searchText'].set('hearty');
-
-      expect(component['filteredRecipes']()).toEqual([taggedRecipes[2]]);
-    });
-
-    it('computes availableTags as the distinct, sorted set of tags across all recipes', () => {
-      const fixture = createFixtureWithTaggedRecipes();
-      const component = fixture.componentInstance;
-
-      expect(component['availableTags']()).toEqual(['breakfast', 'dinner', 'quick', 'sweet']);
-    });
-
-    it('toggleTag filters recipes with OR semantics among selected tags', () => {
-      const fixture = createFixtureWithTaggedRecipes();
-      const component = fixture.componentInstance;
-
-      component['toggleTag']('breakfast');
-
-      expect(component['filteredRecipes']()).toEqual([taggedRecipes[0], taggedRecipes[1]]);
-
-      component['toggleTag']('dinner');
-
-      expect(component['filteredRecipes']()).toEqual(taggedRecipes);
-    });
-
-    it('toggleTag flips membership back off when called again with the same tag', () => {
-      const fixture = createFixtureWithTaggedRecipes();
-      const component = fixture.componentInstance;
-
-      component['toggleTag']('breakfast');
-      component['toggleTag']('breakfast');
-
-      expect(component['activeTags']().size).toBe(0);
-      expect(component['filteredRecipes']()).toEqual(taggedRecipes);
-    });
-
-    it('combines search text and tag selection with AND semantics', () => {
-      const fixture = createFixtureWithTaggedRecipes();
-      const component = fixture.componentInstance;
-
-      component['searchText'].set('omelette');
-      component['toggleTag']('breakfast');
-
-      // Pancakes has the "breakfast" tag but doesn't match the search text,
-      // so only Omelette (matches both) should remain.
-      expect(component['filteredRecipes']()).toEqual([taggedRecipes[1]]);
-    });
-
-    it('restores the full list when search text and tags are cleared', () => {
-      const fixture = createFixtureWithTaggedRecipes();
-      const component = fixture.componentInstance;
-
-      component['searchText'].set('omelette');
-      component['toggleTag']('breakfast');
-      component['searchText'].set('');
-      component['toggleTag']('breakfast');
-
-      expect(component['filteredRecipes']()).toEqual(taggedRecipes);
-    });
-
-    it('does not render the tag-chip row when no recipe has any tags', () => {
-      fakeRecipeService.getAll.mockReturnValue(of(mockRecipes));
-      const fixture = TestBed.createComponent(RecipeListComponent);
       fixture.detectChanges();
 
-      const element = fixture.nativeElement as HTMLElement;
-      expect(element.querySelector('.recipe-tag-filters')).toBeNull();
-    });
+      component['page'].set(2);
+      component['onSearchInput']({ target: { value: 'omelette' } } as unknown as Event);
 
-    it('renders a tag chip per distinct tag and reflects activeTags() in aria-pressed', () => {
-      const fixture = createFixtureWithTaggedRecipes();
-      const element = fixture.nativeElement as HTMLElement;
-
-      const chips = Array.from(element.querySelectorAll('.filter-chip'));
-      expect(chips.map((c) => c.textContent?.trim())).toEqual([
-        'breakfast',
-        'dinner',
-        'quick',
-        'sweet',
-      ]);
-
-      const breakfastChip = chips.find((c) => c.textContent?.trim() === 'breakfast') as
-        HTMLButtonElement | undefined;
-      expect(breakfastChip?.getAttribute('aria-pressed')).toBe('false');
-
-      breakfastChip?.click();
-      fixture.detectChanges();
-
-      expect(breakfastChip?.getAttribute('aria-pressed')).toBe('true');
+      expect(component['page']()).toBe(0);
     });
   });
 
-  describe('sorting', () => {
-    function createSortedFixture(key?: string, dir?: string) {
-      if (key) localStorage.setItem('recipeListSortKey', key);
-      if (dir) localStorage.setItem('recipeListSortDir', dir);
-      fakeRecipeService.getAll.mockReturnValue(of(sortableRecipes));
+  describe('immediate (non-debounced) refetches', () => {
+    it('toggleTag calls getAll immediately without waiting for a debounce', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(taggedRecipes)));
+
       const fixture = TestBed.createComponent(RecipeListComponent);
+      const component = fixture.componentInstance;
       fixture.detectChanges();
-      return fixture;
-    }
+      fakeRecipeService.getAll.mockClear();
 
-    function titlesOf(recipes: Recipe[]): string[] {
-      return recipes.map((r) => r.title);
-    }
+      component['toggleTag']('breakfast');
 
-    it('sorts by title ascending and descending', () => {
-      const ascFixture = createSortedFixture('title', 'asc');
-      expect(titlesOf(ascFixture.componentInstance['sortedRecipes']())).toEqual([
-        'Apple Pie',
-        'Banana Bread',
-        'Carrot Cake',
-      ]);
-
-      const descFixture = createSortedFixture('title', 'desc');
-      expect(titlesOf(descFixture.componentInstance['sortedRecipes']())).toEqual([
-        'Carrot Cake',
-        'Banana Bread',
-        'Apple Pie',
-      ]);
+      expect(fakeRecipeService.getAll).toHaveBeenCalledTimes(1);
+      expect(fakeRecipeService.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({ tags: ['breakfast'] }),
+      );
     });
 
-    it('sorts by prepTimeMinutes ascending and descending, with nulls last in both directions', () => {
-      const ascFixture = createSortedFixture('prepTimeMinutes', 'asc');
-      expect(titlesOf(ascFixture.componentInstance['sortedRecipes']())).toEqual([
-        'Banana Bread',
-        'Carrot Cake',
-        'Apple Pie',
-      ]);
+    it('setSort calls getAll immediately with the new sort param', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
 
-      const descFixture = createSortedFixture('prepTimeMinutes', 'desc');
-      expect(titlesOf(descFixture.componentInstance['sortedRecipes']())).toEqual([
-        'Carrot Cake',
-        'Banana Bread',
-        'Apple Pie',
-      ]);
-    });
-
-    it('sorts by cookTimeMinutes ascending and descending, with nulls last in both directions', () => {
-      const ascFixture = createSortedFixture('cookTimeMinutes', 'asc');
-      expect(titlesOf(ascFixture.componentInstance['sortedRecipes']())).toEqual([
-        'Apple Pie',
-        'Banana Bread',
-        'Carrot Cake',
-      ]);
-
-      const descFixture = createSortedFixture('cookTimeMinutes', 'desc');
-      expect(titlesOf(descFixture.componentInstance['sortedRecipes']())).toEqual([
-        'Banana Bread',
-        'Apple Pie',
-        'Carrot Cake',
-      ]);
-    });
-
-    it('sorts by createdAt ascending and descending', () => {
-      const ascFixture = createSortedFixture('createdAt', 'asc');
-      expect(titlesOf(ascFixture.componentInstance['sortedRecipes']())).toEqual([
-        'Apple Pie',
-        'Carrot Cake',
-        'Banana Bread',
-      ]);
-
-      const descFixture = createSortedFixture('createdAt', 'desc');
-      expect(titlesOf(descFixture.componentInstance['sortedRecipes']())).toEqual([
-        'Banana Bread',
-        'Carrot Cake',
-        'Apple Pie',
-      ]);
-    });
-
-    it('sorts by updatedAt ascending and descending', () => {
-      const ascFixture = createSortedFixture('updatedAt', 'asc');
-      expect(titlesOf(ascFixture.componentInstance['sortedRecipes']())).toEqual([
-        'Apple Pie',
-        'Banana Bread',
-        'Carrot Cake',
-      ]);
-
-      const descFixture = createSortedFixture('updatedAt', 'desc');
-      expect(titlesOf(descFixture.componentInstance['sortedRecipes']())).toEqual([
-        'Carrot Cake',
-        'Banana Bread',
-        'Apple Pie',
-      ]);
-    });
-
-    it('defaults to title/asc when localStorage has no stored sort preference', () => {
-      const fixture = createSortedFixture();
+      const fixture = TestBed.createComponent(RecipeListComponent);
       const component = fixture.componentInstance;
+      fixture.detectChanges();
+      fakeRecipeService.getAll.mockClear();
 
-      expect(component['sortKey']()).toBe('title');
-      expect(component['sortDir']()).toBe('asc');
+      component['setSort']('createdAt');
+
+      expect(fakeRecipeService.getAll).toHaveBeenCalledTimes(1);
+      expect(fakeRecipeService.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({ sort: 'createdAt,asc' }),
+      );
     });
 
-    it('setSort flips direction when called with the already-active key', () => {
-      const fixture = createSortedFixture('title', 'asc');
+    it('setSort flips direction and persists to localStorage when called with the already-active key', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
       const component = fixture.componentInstance;
+      fixture.detectChanges();
 
       component['setSort']('title');
 
       expect(component['sortDir']()).toBe('desc');
-
-      component['setSort']('title');
-
-      expect(component['sortDir']()).toBe('asc');
+      expect(localStorage.getItem('recipeListSortDir')).toBe('desc');
     });
 
-    it('setSort resets direction to asc when switching to a new key', () => {
-      const fixture = createSortedFixture('title', 'desc');
-      const component = fixture.componentInstance;
+    it('changing the sort <select> switches sortKey() and refetches', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
 
-      component['setSort']('createdAt');
-
-      expect(component['sortKey']()).toBe('createdAt');
-      expect(component['sortDir']()).toBe('asc');
-    });
-
-    it('persists sort key/direction to localStorage and survives a fresh component instance', () => {
-      const fixture = createSortedFixture();
-      const component = fixture.componentInstance;
-
-      component['setSort']('cookTimeMinutes');
-
-      expect(localStorage.getItem('recipeListSortKey')).toBe('cookTimeMinutes');
-      expect(localStorage.getItem('recipeListSortDir')).toBe('asc');
-
-      const reloadedFixture = TestBed.createComponent(RecipeListComponent);
-      reloadedFixture.detectChanges();
-
-      expect(reloadedFixture.componentInstance['sortKey']()).toBe('cookTimeMinutes');
-      expect(reloadedFixture.componentInstance['sortDir']()).toBe('asc');
-    });
-
-    it('the direction toggle button flips sortDir() via setSort(sortKey())', () => {
-      const fixture = createSortedFixture('title', 'asc');
+      const fixture = TestBed.createComponent(RecipeListComponent);
       const element = fixture.nativeElement as HTMLElement;
-
-      const directionButton = element.querySelector(
-        'button[aria-label="Sort ascending"]',
-      ) as HTMLButtonElement;
-      expect(directionButton).toBeTruthy();
-
-      directionButton.click();
       fixture.detectChanges();
-
-      expect(fixture.componentInstance['sortDir']()).toBe('desc');
-      expect(element.querySelector('button[aria-label="Sort descending"]')).toBeTruthy();
-    });
-
-    it('changing the sort <select> switches sortKey() and re-renders sorted order', () => {
-      const fixture = createSortedFixture('title', 'asc');
-      const element = fixture.nativeElement as HTMLElement;
+      fakeRecipeService.getAll.mockClear();
 
       const select = element.querySelector('.recipe-sort-select') as HTMLSelectElement;
       select.value = 'createdAt';
@@ -634,26 +459,164 @@ describe('RecipeListComponent', () => {
       fixture.detectChanges();
 
       expect(fixture.componentInstance['sortKey']()).toBe('createdAt');
+      expect(fakeRecipeService.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({ sort: 'createdAt,asc' }),
+      );
     });
-  });
 
-  describe('empty/error state polish', () => {
-    it('shows the "no matches" empty state when recipes exist but the filtered/sorted result is empty', () => {
-      fakeRecipeService.getAll.mockReturnValue(of(taggedRecipes));
+    it('toggleTag and setSort reset page() to 0 before refetching', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(taggedRecipes, { totalPages: 3 })));
+
       const fixture = TestBed.createComponent(RecipeListComponent);
       const component = fixture.componentInstance;
       fixture.detectChanges();
 
-      component['searchText'].set('this matches nothing at all');
+      component['page'].set(2);
+      component['toggleTag']('breakfast');
+
+      expect(component['page']()).toBe(0);
+
+      component['page'].set(2);
+      component['setSort']('createdAt');
+
+      expect(component['page']()).toBe(0);
+    });
+  });
+
+  describe('pagination', () => {
+    it('renders "Page X of Y" and disables Prev on the first page', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes, { page: 0, totalPages: 3 })));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
       fixture.detectChanges();
 
       const element = fixture.nativeElement as HTMLElement;
-      expect(element.textContent).toContain('No recipes match your search.');
-      expect(element.textContent).not.toContain('No recipes yet');
+      expect(element.textContent).toContain('Page 1 of 3');
+
+      const buttons = Array.from(element.querySelectorAll('.recipe-list-pager button'));
+      const prevButton = buttons.find((b) => b.textContent?.trim() === 'Prev') as HTMLButtonElement;
+      const nextButton = buttons.find((b) => b.textContent?.trim() === 'Next') as HTMLButtonElement;
+
+      expect(prevButton.disabled).toBe(true);
+      expect(nextButton.disabled).toBe(false);
     });
 
-    it('does not show the "no matches" state when there are truly no recipes', () => {
-      fakeRecipeService.getAll.mockReturnValue(of([]));
+    it('disables Next on the last page', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes, { page: 2, totalPages: 3 })));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      const component = fixture.componentInstance;
+      component['page'].set(2);
+      fixture.detectChanges();
+
+      const element = fixture.nativeElement as HTMLElement;
+      const buttons = Array.from(element.querySelectorAll('.recipe-list-pager button'));
+      const nextButton = buttons.find((b) => b.textContent?.trim() === 'Next') as HTMLButtonElement;
+
+      expect(nextButton.disabled).toBe(true);
+    });
+
+    it('nextPage() increments page() and calls getAll with the new page, without resetting filters', () => {
+      fakeRecipeService.getAll.mockReturnValue(
+        of(toPage(taggedRecipes, { page: 0, totalPages: 3 })),
+      );
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      component['toggleTag']('breakfast');
+      fakeRecipeService.getAll.mockClear();
+
+      component['nextPage']();
+
+      expect(component['page']()).toBe(1);
+      expect(fakeRecipeService.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({ page: 1, tags: ['breakfast'] }),
+      );
+    });
+
+    it('prevPage() decrements page() and calls getAll with the new page', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes, { page: 1, totalPages: 3 })));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      const component = fixture.componentInstance;
+      component['page'].set(1);
+      fixture.detectChanges();
+      fakeRecipeService.getAll.mockClear();
+
+      component['prevPage']();
+
+      expect(component['page']()).toBe(0);
+      expect(fakeRecipeService.getAll).toHaveBeenCalledWith(expect.objectContaining({ page: 0 }));
+    });
+
+    it('prevPage() is a no-op at the first page', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes, { page: 0, totalPages: 3 })));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+      fakeRecipeService.getAll.mockClear();
+
+      component['prevPage']();
+
+      expect(component['page']()).toBe(0);
+      expect(fakeRecipeService.getAll).not.toHaveBeenCalled();
+    });
+
+    it('nextPage() is a no-op at the last page', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes, { page: 2, totalPages: 3 })));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      const component = fixture.componentInstance;
+      component['page'].set(2);
+      fixture.detectChanges();
+      fakeRecipeService.getAll.mockClear();
+
+      component['nextPage']();
+
+      expect(component['page']()).toBe(2);
+      expect(fakeRecipeService.getAll).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('availableTags', () => {
+    it('accumulates the union of tags across responses instead of resetting per request', () => {
+      fakeRecipeService.getAll.mockReturnValueOnce(
+        of(toPage([taggedRecipes[0]], { totalPages: 2 })),
+      );
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      expect([...component['availableTags']()].sort()).toEqual(['breakfast', 'sweet']);
+
+      fakeRecipeService.getAll.mockReturnValueOnce(
+        of(toPage([taggedRecipes[2]], { page: 1, totalPages: 2 })),
+      );
+      component['nextPage']();
+
+      // The tags from the first response ("breakfast", "sweet") are still
+      // present even though the current page's content no longer includes
+      // that recipe — availableTags is sticky for the session.
+      expect([...component['availableTags']()].sort()).toEqual(['breakfast', 'dinner', 'sweet']);
+    });
+
+    it('does not render the tag-chip row when no recipe in any fetched response has tags', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      fixture.detectChanges();
+
+      const element = fixture.nativeElement as HTMLElement;
+      expect(element.querySelector('.recipe-tag-filters')).toBeNull();
+    });
+  });
+
+  describe('empty/error state', () => {
+    it('shows "No recipes yet" when q/tags are empty and the page has no content', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage([])));
       const fixture = TestBed.createComponent(RecipeListComponent);
       fixture.detectChanges();
 
@@ -662,7 +625,22 @@ describe('RecipeListComponent', () => {
       expect(element.textContent).not.toContain('No recipes match your search.');
     });
 
-    it('does not show the "no matches" state while the load errored', () => {
+    it('shows "No matches" + Clear filters when a filter is active and the page has no content', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(taggedRecipes)));
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      fakeRecipeService.getAll.mockReturnValue(of(toPage([])));
+      component['toggleTag']('breakfast');
+      fixture.detectChanges();
+
+      const element = fixture.nativeElement as HTMLElement;
+      expect(element.textContent).toContain('No recipes match your search.');
+      expect(element.textContent).not.toContain('No recipes yet');
+    });
+
+    it('does not show either empty state while the load errored', () => {
       vi.spyOn(console, 'error').mockImplementation(() => undefined);
       fakeRecipeService.getAll.mockReturnValue(throwError(() => new Error('boom')));
       const fixture = TestBed.createComponent(RecipeListComponent);
@@ -670,43 +648,40 @@ describe('RecipeListComponent', () => {
 
       const element = fixture.nativeElement as HTMLElement;
       expect(element.textContent).not.toContain('No recipes match your search.');
+      expect(element.textContent).not.toContain('No recipes yet');
       expect(element.textContent).toContain('Failed to load recipes. Is the backend running?');
     });
 
-    it('does not show the "no matches" state when filters currently match at least one recipe', () => {
-      fakeRecipeService.getAll.mockReturnValue(of(taggedRecipes));
-      const fixture = TestBed.createComponent(RecipeListComponent);
-      fixture.detectChanges();
-
-      const element = fixture.nativeElement as HTMLElement;
-      expect(element.textContent).not.toContain('No recipes match your search.');
-    });
-
-    it('clearFilters resets searchText() and activeTags() and restores the full list', () => {
-      fakeRecipeService.getAll.mockReturnValue(of(taggedRecipes));
+    it('clearFilters resets searchText()/activeTags()/page() to defaults and refetches', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(taggedRecipes)));
       const fixture = TestBed.createComponent(RecipeListComponent);
       const component = fixture.componentInstance;
       fixture.detectChanges();
 
       component['searchText'].set('nothing matches this');
       component['toggleTag']('breakfast');
-
-      expect(component['sortedRecipes']().length).toBe(0);
+      component['page'].set(2);
+      fakeRecipeService.getAll.mockClear();
 
       component['clearFilters']();
 
       expect(component['searchText']()).toBe('');
       expect(component['activeTags']().size).toBe(0);
-      expect(component['sortedRecipes']().length).toBe(taggedRecipes.length);
+      expect(component['page']()).toBe(0);
+      expect(fakeRecipeService.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({ q: undefined, tags: undefined, page: 0 }),
+      );
     });
 
     it('clicking "Clear filters" in the "no matches" state restores the full list', () => {
-      fakeRecipeService.getAll.mockReturnValue(of(taggedRecipes));
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(taggedRecipes)));
       const fixture = TestBed.createComponent(RecipeListComponent);
       const component = fixture.componentInstance;
       fixture.detectChanges();
 
+      fakeRecipeService.getAll.mockReturnValue(of(toPage([])));
       component['searchText'].set('nothing matches this');
+      component['loadRecipes']();
       fixture.detectChanges();
 
       const clearButton = Array.from(
@@ -714,12 +689,64 @@ describe('RecipeListComponent', () => {
       ).find((btn) => btn.textContent?.includes('Clear filters')) as HTMLButtonElement;
       expect(clearButton).toBeTruthy();
 
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(taggedRecipes)));
       clearButton.click();
       fixture.detectChanges();
 
       expect(component['searchText']()).toBe('');
       expect((fixture.nativeElement as HTMLElement).textContent).not.toContain(
         'No recipes match your search.',
+      );
+    });
+  });
+
+  describe('query param seeding and sync', () => {
+    it('seeds searchText/activeTags/sortKey/sortDir/page from the route query params on init', () => {
+      TestBed.overrideProvider(ActivatedRoute, {
+        useValue: routeWithQueryParams({
+          q: 'abc',
+          tags: 'x,y',
+          sort: 'createdAt,desc',
+          page: '2',
+        }),
+      });
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes, { page: 2, totalPages: 3 })));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      expect(component['searchText']()).toBe('abc');
+      expect([...component['activeTags']()].sort()).toEqual(['x', 'y']);
+      expect(component['sortKey']()).toBe('createdAt');
+      expect(component['sortDir']()).toBe('desc');
+      expect(component['page']()).toBe(2);
+      expect(fakeRecipeService.getAll).toHaveBeenCalledWith({
+        q: 'abc',
+        tags: ['x', 'y'],
+        sort: 'createdAt,desc',
+        page: 2,
+      });
+    });
+
+    it('updates the route query params (merging, without a new history entry) when a filter changes', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      fixture.detectChanges();
+
+      const router = TestBed.inject(Router);
+      const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+      fixture.componentInstance['toggleTag']('vegan');
+
+      expect(navigateSpy).toHaveBeenCalledWith(
+        [],
+        expect.objectContaining({
+          queryParams: expect.objectContaining({ tags: 'vegan', page: null }),
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        }),
       );
     });
   });

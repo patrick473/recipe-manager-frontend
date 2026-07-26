@@ -30,6 +30,8 @@ import {
 } from 'rxjs';
 
 import type {
+  ListRecipesParams,
+  RecipePageResponse,
   RecipeRequest,
   RecipeResponse
 } from '../model';
@@ -73,7 +75,69 @@ type HttpClientObserveOptions = HttpClientOptions & {
   readonly observe?: 'body' | 'events' | 'response';
 };
 
+type AngularHttpParamValue = string | number | boolean | Array<string | number | boolean>;
+type AngularHttpParamValueWithNullable = AngularHttpParamValue | null;
 
+function filterParams(
+  params: Record<string, unknown>,
+  requiredNullableKeys?: ReadonlySet<string>,
+  preserveRequiredNullables?: false,
+  passthroughKeys?: undefined,
+): Record<string, AngularHttpParamValue>;
+function filterParams(
+  params: Record<string, unknown>,
+  requiredNullableKeys: ReadonlySet<string> | undefined,
+  preserveRequiredNullables: true,
+  passthroughKeys?: undefined,
+): Record<string, AngularHttpParamValueWithNullable>;
+function filterParams(
+  params: Record<string, unknown>,
+  requiredNullableKeys: ReadonlySet<string> | undefined,
+  preserveRequiredNullables: boolean | undefined,
+  passthroughKeys: ReadonlySet<string>,
+): Record<string, unknown>;
+function filterParams(
+  params: Record<string, unknown>,
+  requiredNullableKeys: ReadonlySet<string> = new Set(),
+  preserveRequiredNullables = false,
+  passthroughKeys: ReadonlySet<string> = new Set(),
+): Record<string, unknown> {
+  const filteredParams: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(params)) {
+    if (passthroughKeys.has(key)) {
+      if (value !== undefined) {
+        filteredParams[key] = value;
+      }
+      continue;
+    }
+    if (Array.isArray(value)) {
+      const filtered = value.filter(
+        (item) =>
+          item != null &&
+          (typeof item === 'string' ||
+            typeof item === 'number' ||
+            typeof item === 'boolean'),
+      ) as Array<string | number | boolean>;
+      if (filtered.length) {
+        filteredParams[key] = filtered;
+      }
+    } else if (value === null && requiredNullableKeys.has(key)) {
+      // With a paramsSerializer (preserveRequiredNullables) the literal null
+      // is passed through for it to consume; without one, emit an empty
+      // string so the required key still reaches the wire as `?key=`
+      // instead of being silently dropped. See #3712.
+      filteredParams[key] = preserveRequiredNullables ? null : '';
+    } else if (
+      value != null &&
+      (typeof value === 'string' ||
+        typeof value === 'number' ||
+        typeof value === 'boolean')
+    ) {
+      filteredParams[key] = value;
+    }
+  }
+  return filteredParams;
+}
 
 
 
@@ -83,37 +147,39 @@ type HttpClientObserveOptions = HttpClientOptions & {
 export class RecipesService {
   private readonly http = inject(HttpClient);
 /**
- * Returns every recipe in the database ordered by ascending id.
- * @summary List all recipes
+ * Returns a page of recipes matching the given filter, sort, and pagination parameters. `q` and `tags` are combined with AND semantics when both are present.
+ * @summary List recipes
  */
- listRecipes<TData = RecipeResponse[]>( options?: HttpClientBodyOptions): Observable<TData>;
- listRecipes<TData = RecipeResponse[]>( options?: HttpClientEventOptions): Observable<HttpEvent<TData>>;
- listRecipes<TData = RecipeResponse[]>( options?: HttpClientResponseOptions): Observable<AngularHttpResponse<TData>>;
-  listRecipes<TData = RecipeResponse[]>(
-     options?: HttpClientObserveOptions): Observable<TData | HttpEvent<TData> | AngularHttpResponse<TData>> {
+ listRecipes<TData = RecipePageResponse>(params?: ListRecipesParams, options?: HttpClientBodyOptions): Observable<TData>;
+ listRecipes<TData = RecipePageResponse>(params?: ListRecipesParams, options?: HttpClientEventOptions): Observable<HttpEvent<TData>>;
+ listRecipes<TData = RecipePageResponse>(params?: ListRecipesParams, options?: HttpClientResponseOptions): Observable<AngularHttpResponse<TData>>;
+  listRecipes<TData = RecipePageResponse>(
+    params?: ListRecipesParams, options?: HttpClientObserveOptions): Observable<TData | HttpEvent<TData> | AngularHttpResponse<TData>> {
+    const filteredParams = filterParams({...params, ...options?.params}, new Set<string>([]));
+
     if (options?.observe === 'events') {
       return this.http.get<TData>(
       `/recipes`,{
-        ...(options as Omit<NonNullable<typeof options>, 'observe'>),
+    ...(options as Omit<NonNullable<typeof options>, 'observe'>),
         observe: 'events',
-      }
+        params: filteredParams,}
     );
     }
 
     if (options?.observe === 'response') {
       return this.http.get<TData>(
       `/recipes`,{
-        ...(options as Omit<NonNullable<typeof options>, 'observe'>),
+    ...(options as Omit<NonNullable<typeof options>, 'observe'>),
         observe: 'response',
-      }
+        params: filteredParams,}
     );
     }
 
     return this.http.get<TData>(
       `/recipes`,{
-        ...(options as Omit<NonNullable<typeof options>, 'observe'>),
+    ...(options as Omit<NonNullable<typeof options>, 'observe'>),
         observe: 'body',
-      }
+        params: filteredParams,}
     );
   }
 /**
@@ -264,7 +330,7 @@ export class RecipesService {
   }
 };
 
-export type ListRecipesClientResult = NonNullable<RecipeResponse[]>
+export type ListRecipesClientResult = NonNullable<RecipePageResponse>
 export type CreateRecipeClientResult = NonNullable<RecipeResponse>
 export type GetRecipeClientResult = NonNullable<RecipeResponse>
 export type UpdateRecipeClientResult = NonNullable<RecipeResponse>

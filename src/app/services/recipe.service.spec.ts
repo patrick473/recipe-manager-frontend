@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { Recipe, RecipeRequest } from '../models/recipe.model';
+import { Recipe, RecipePageResponse, RecipeRequest } from '../models/recipe.model';
 import { ConfirmDialogService } from '../shared/confirm-dialog/confirm-dialog.service';
 import { RecipeService } from './recipe.service';
 
@@ -24,6 +24,14 @@ const mockRecipes: Recipe[] = [
     updatedAt: '2024-01-02T10:00:00',
   },
 ];
+
+const mockPageResponse: RecipePageResponse = {
+  content: mockRecipes,
+  page: 0,
+  size: 20,
+  totalElements: 2,
+  totalPages: 1,
+};
 
 describe('RecipeService', () => {
   let service: RecipeService;
@@ -50,22 +58,37 @@ describe('RecipeService', () => {
     expect(service.hasRecipes()).toBe(false);
   });
 
-  it('getAll() should fetch recipes and update recipeCount signal', () => {
-    let result: Recipe[] | undefined;
-    service.getAll().subscribe((r) => (result = r));
+  it('getAll() should fetch a page of recipes and update recipeCount from totalElements', () => {
+    let result: RecipePageResponse | undefined;
+    service
+      .getAll({ q: 'pasta', tags: ['dinner'], sort: 'title,asc', page: 0, size: 20 })
+      .subscribe((r) => (result = r));
 
     const req = httpMock.expectOne((r) => r.url.includes('/recipes'));
-    req.flush(mockRecipes);
+    expect(req.request.params.get('q')).toBe('pasta');
+    expect(req.request.params.get('sort')).toBe('title,asc');
+    expect(req.request.params.get('page')).toBe('0');
+    expect(req.request.params.get('size')).toBe('20');
+    req.flush(mockPageResponse);
 
-    expect(result).toEqual(mockRecipes);
+    expect(result).toEqual(mockPageResponse);
     expect(service.recipeCount()).toBe(2);
     expect(service.hasRecipes()).toBe(true);
   });
 
+  it('getAll() sets recipeCount from totalElements, not the current page size', () => {
+    service.getAll({}).subscribe();
+    httpMock
+      .expectOne((r) => r.url.includes('/recipes'))
+      .flush({ ...mockPageResponse, content: [mockRecipes[0]], totalElements: 42 });
+
+    expect(service.recipeCount()).toBe(42);
+  });
+
   it('delete() should decrement recipeCount signal', () => {
     // Seed the count
-    service.getAll().subscribe();
-    httpMock.expectOne((r) => r.url.includes('/recipes')).flush(mockRecipes);
+    service.getAll({}).subscribe();
+    httpMock.expectOne((r) => r.url.includes('/recipes')).flush(mockPageResponse);
     expect(service.recipeCount()).toBe(2);
 
     service.delete(1).subscribe();

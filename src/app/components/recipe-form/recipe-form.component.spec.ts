@@ -48,7 +48,9 @@ describe('RecipeFormComponent', () => {
 
   beforeEach(() => {
     fakeRecipeService = {
-      getAll: vi.fn().mockReturnValue(of([])),
+      getAll: vi
+        .fn()
+        .mockReturnValue(of({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 })),
       getById: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
