@@ -58,6 +58,7 @@ describe('RecipeFormComponent', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    history.replaceState(null, '', window.location.href);
   });
 
   describe('create mode', () => {
@@ -106,6 +107,65 @@ describe('RecipeFormComponent', () => {
         cookTimeMinutes: null,
         servings: null,
       });
+    });
+  });
+
+  describe('clone mode', () => {
+    it('prefills the form from history.state.cloneFrom with a " (Copy)"-suffixed title, staying in create mode', () => {
+      history.pushState({ cloneFrom: mockRecipe }, '');
+      configure(null);
+
+      const fixture = TestBed.createComponent(RecipeFormComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      expect(component['isEdit']()).toBe(false);
+      expect(fakeRecipeService.getById).not.toHaveBeenCalled();
+      expect(component['form'].getRawValue()).toEqual({
+        title: 'Pasta Carbonara (Copy)',
+        description: '',
+        content: mockRecipe.content,
+        tags: mockRecipe.tags,
+        prepTimeMinutes: mockRecipe.prepTimeMinutes,
+        cookTimeMinutes: mockRecipe.cookTimeMinutes,
+        servings: mockRecipe.servings,
+      });
+    });
+
+    it('calls recipeService.create() (not update()) on submit', () => {
+      history.pushState({ cloneFrom: mockRecipe }, '');
+      fakeRecipeService.create.mockReturnValue(of({ ...mockRecipe, id: 99 }));
+      configure(null);
+
+      const fixture = TestBed.createComponent(RecipeFormComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      component['onSubmit']();
+
+      expect(fakeRecipeService.create).toHaveBeenCalledWith({
+        title: 'Pasta Carbonara (Copy)',
+        description: null,
+        content: mockRecipe.content,
+        tags: mockRecipe.tags,
+        prepTimeMinutes: mockRecipe.prepTimeMinutes,
+        cookTimeMinutes: mockRecipe.cookTimeMinutes,
+        servings: mockRecipe.servings,
+      });
+      expect(fakeRecipeService.update).not.toHaveBeenCalled();
+    });
+
+    it('ignores history.state.cloneFrom when a :id route param is present (edit mode takes precedence)', () => {
+      history.pushState({ cloneFrom: mockRecipe }, '');
+      fakeRecipeService.getById.mockReturnValue(of({ ...mockRecipe, id: 5, title: 'Original' }));
+      configure('5');
+
+      const fixture = TestBed.createComponent(RecipeFormComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      expect(component['isEdit']()).toBe(true);
+      expect(component['form'].get('title')?.value).toBe('Original');
     });
   });
 

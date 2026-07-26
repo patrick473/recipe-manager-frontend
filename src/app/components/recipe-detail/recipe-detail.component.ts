@@ -17,12 +17,13 @@ import { ButtonDirective } from '../../shared/button.directive';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { LoaderComponent } from '../../shared/loader/loader.component';
 import { PropertiesPanelComponent } from '../../shared/properties-panel/properties-panel.component';
+import { totalTimeMinutes } from '../../shared/recipe-time.util';
 
 /**
  * Shows a single recipe with:
  *   - title, optional description, and creation / update timestamps
  *   - Markdown content rendered to sanitised HTML
- *   - Edit and Delete action buttons
+ *   - Edit, Clone, and Delete action buttons
  *
  * Uses Angular 22 block control-flow syntax (@if / @else).
  */
@@ -53,6 +54,8 @@ export class RecipeDetailComponent implements OnInit {
   protected readonly error = signal<string | null>(null);
   protected readonly deleting = signal(false);
 
+  protected readonly totalTimeMinutes = totalTimeMinutes;
+
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     this.recipeService
@@ -73,6 +76,13 @@ export class RecipeDetailComponent implements OnInit {
           console.error(err);
         },
       });
+  }
+
+  protected cloneRecipe(): void {
+    const recipe = this.recipe();
+    if (!recipe) return;
+
+    this.router.navigate(['/recipes/new'], { state: { cloneFrom: recipe } });
   }
 
   protected deleteRecipe(): void {
