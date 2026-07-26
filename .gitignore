@@ -30,5 +30,3 @@ Thumbs.db
 /playwright-report/
 /playwright/.cache/
 
-# Orval-generated API client (regenerate via `npm run api:generate`)
-/src/app/api/generated/
