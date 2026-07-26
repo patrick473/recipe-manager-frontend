@@ -43,7 +43,7 @@ convention:
   underlying text stays plain and editable — this is a rendering layer over
   the text, not a rich-text/contentEditable model.
 - `> quote` gets the same left-border treatment as `.markdown-body
-  blockquote`.
+blockquote`.
 - Fenced code blocks get the same monospace/background treatment as
   `.markdown-body pre`.
 - A toggle (button + `Ctrl/Cmd+E`) switches to **Source mode**: plain
@@ -106,12 +106,12 @@ Obsidian's Properties panel, scoped to a **fixed set of typed fields** rather
 than arbitrary keys (arbitrary keys would mean an untyped JSON blob in the
 API, which breaks from this app's existing hand-typed-DTO convention):
 
-| Field             | Type            | Rendered as                                   |
-|-------------------|-----------------|------------------------------------------------|
-| `tags`            | `string[]`      | removable pill chips + "+ tag" add input, autocompleting against tags already used on other recipes |
-| `prepTimeMinutes` | `number \| null`| plain number input                            |
-| `cookTimeMinutes` | `number \| null`| plain number input                            |
-| `servings`        | `number \| null`| plain number input                            |
+| Field             | Type             | Rendered as                                                                                         |
+| ----------------- | ---------------- | --------------------------------------------------------------------------------------------------- |
+| `tags`            | `string[]`       | removable pill chips + "+ tag" add input, autocompleting against tags already used on other recipes |
+| `prepTimeMinutes` | `number \| null` | plain number input                                                                                  |
+| `cookTimeMinutes` | `number \| null` | plain number input                                                                                  |
+| `servings`        | `number \| null` | plain number input                                                                                  |
 
 Shown in both `RecipeFormComponent` (editable) and `RecipeDetailComponent`
 (read-only render: chips + compact label/value rows), directly above
@@ -141,7 +141,7 @@ property-table look. Collapsible via a chevron, default expanded.
   from `RecipeResponse`, above `.markdown-body`.
 - `recipe.model.ts`: no manual change — it re-exports the generated types,
   which pick up the new fields automatically once `api:generate` reruns.
-- *Optional stretch, not required for this spec*: show tag chips on
+- _Optional stretch, not required for this spec_: show tag chips on
   `RecipeListComponent` cards, since tags now exist on every recipe.
 
 ---
