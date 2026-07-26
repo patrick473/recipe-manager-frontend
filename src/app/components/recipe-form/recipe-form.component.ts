@@ -86,11 +86,13 @@ export class RecipeFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.recipeService
-      .getAll()
+      // size: 100 is the backend's max page size — the closest approximation
+      // to "every tag currently in use" now that GET /recipes is paginated.
+      .getAll({ size: 100 })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (recipes) => {
-          const allTags = recipes.flatMap((r) => r.tags ?? []);
+        next: (response) => {
+          const allTags = response.content.flatMap((r) => r.tags ?? []);
           this.tagSuggestions.set([...new Set(allTags)].sort());
         },
         error: (err) => console.error(err),

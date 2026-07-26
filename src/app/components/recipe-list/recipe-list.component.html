@@ -30,7 +30,7 @@
   </div>
 </div>
 
-@if (!loading() && recipes().length > 0) {
+@if (!loading() && !(recipes().length === 0 && !isFilterActive())) {
   <div class="recipe-list-toolbar">
     <input
       type="search"
@@ -67,7 +67,7 @@
       </button>
     </div>
 
-    @if (availableTags().length > 0) {
+    @if (availableTags().size > 0) {
       <div class="recipe-tag-filters">
         @for (tag of availableTags(); track tag) {
           <button
@@ -93,7 +93,7 @@
   <app-loader size="l" text="Loading recipes…" class="loading-block" />
 }
 
-@if (!loading() && recipes().length === 0 && !error()) {
+@if (!loading() && recipes().length === 0 && !error() && !isFilterActive()) {
   <div class="empty-state">
     <h2>No recipes yet</h2>
     <p>Create your first recipe to get started.</p>
@@ -104,7 +104,7 @@
   </div>
 }
 
-@if (!loading() && recipes().length > 0 && sortedRecipes().length === 0) {
+@if (!loading() && recipes().length === 0 && !error() && isFilterActive()) {
   <div class="empty-state">
     <h2>No matches</h2>
     <p>No recipes match your search.</p>
@@ -114,10 +114,10 @@
   </div>
 }
 
-@if (!loading() && sortedRecipes().length > 0) {
+@if (!loading() && recipes().length > 0) {
   @if (viewMode() === 'grid') {
     <div class="recipe-grid">
-      @for (recipe of sortedRecipes(); track recipe.id) {
+      @for (recipe of recipes(); track recipe.id) {
         <div class="card recipe-card">
           <div class="recipe-card-body">
             <h3 class="recipe-card-title">
@@ -160,7 +160,7 @@
     </div>
   } @else {
     <div class="recipe-list">
-      @for (recipe of sortedRecipes(); track recipe.id) {
+      @for (recipe of recipes(); track recipe.id) {
         <div class="recipe-list-row">
           <div class="recipe-list-row-main">
             <h3 class="recipe-list-row-title">
@@ -204,4 +204,30 @@
       }
     </div>
   }
+}
+
+@if (!loading() && recipes().length > 0) {
+  <div class="recipe-list-pager">
+    <button
+      type="button"
+      appButton
+      appearance="secondary"
+      size="s"
+      [disabled]="page() === 0"
+      (click)="prevPage()"
+    >
+      Prev
+    </button>
+    <span class="recipe-list-pager-label">Page {{ page() + 1 }} of {{ totalPages() }}</span>
+    <button
+      type="button"
+      appButton
+      appearance="secondary"
+      size="s"
+      [disabled]="page() + 1 >= totalPages()"
+      (click)="nextPage()"
+    >
+      Next
+    </button>
+  </div>
 }

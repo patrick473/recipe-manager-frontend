@@ -8,8 +8,9 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { debounceTime, distinctUntilChanged, skip } from 'rxjs/operators';
 import { Recipe } from '../../models/recipe.model';
 import { RecipeService } from '../../services/recipe.service';
 import { ButtonDirective } from '../../shared/button.directive';
@@ -49,43 +50,46 @@ function initialSortDir(): SortDir {
   return stored === 'desc' ? 'desc' : 'asc';
 }
 
-/** Extracts the value a recipe is compared on for a given sort key. `null` sorts last. */
-function sortValue(recipe: Recipe, key: SortKey): string | number | null {
-  switch (key) {
-    case 'title':
-      return recipe.title.toLowerCase();
-    case 'prepTimeMinutes':
-      return recipe.prepTimeMinutes ?? null;
-    case 'cookTimeMinutes':
-      return recipe.cookTimeMinutes ?? null;
-    case 'createdAt':
-      return recipe.createdAt;
-    case 'updatedAt':
-      return recipe.updatedAt;
+/**
+ * Parses `field,dir` from the route's `sort` query param, falling back to the
+ * localStorage-persisted preference when the param is absent or invalid.
+ * `q`/`tags`/`page` are session/URL-only (never persisted), but `sort` keeps
+ * its standing localStorage default and is only overridden when the URL
+ * itself carries a `sort` param (e.g. a shared link or reload).
+ */
+function initialSort(route: ActivatedRoute): { key: SortKey; dir: SortDir } {
+  const raw = route.snapshot.queryParamMap.get('sort');
+  if (raw) {
+    const [field, dir] = raw.split(',');
+    if ((SORT_KEYS as string[]).includes(field)) {
+      return { key: field as SortKey, dir: dir === 'desc' ? 'desc' : 'asc' };
+    }
   }
+  return { key: initialSortKey(), dir: initialSortDir() };
 }
 
-/** Nulls always sort last, regardless of direction. */
-function compareRecipes(a: Recipe, b: Recipe, key: SortKey, dir: SortDir): number {
-  const valueA = sortValue(a, key);
-  const valueB = sortValue(b, key);
+function initialSearchText(route: ActivatedRoute): string {
+  return route.snapshot.queryParamMap.get('q') ?? '';
+}
 
-  if (valueA === null && valueB === null) return 0;
-  if (valueA === null) return 1;
-  if (valueB === null) return -1;
+function initialActiveTags(route: ActivatedRoute): ReadonlySet<string> {
+  const raw = route.snapshot.queryParamMap.get('tags');
+  return new Set(raw ? raw.split(',').filter(Boolean) : []);
+}
 
-  const cmp =
-    typeof valueA === 'string' && typeof valueB === 'string'
-      ? valueA.localeCompare(valueB)
-      : (valueA as number) - (valueB as number);
-
-  return dir === 'asc' ? cmp : -cmp;
+function initialPage(route: ActivatedRoute): number {
+  const raw = Number(route.snapshot.queryParamMap.get('page'));
+  return Number.isInteger(raw) && raw >= 0 ? raw : 0;
 }
 
 /**
  * Displays a card grid of all recipes. Each card links to the detail view.
  * Provides per-card delete (via a confirm dialog) with optimistic
  * removal from the list.
+ *
+ * Search, tag filtering, sorting, and pagination are all driven by the
+ * server (`GET /recipes`) — this component holds only the current page's
+ * `recipes()` plus the filter/sort/page state used to build the request.
  *
  * Uses Angular 22 block control-flow (@if / @for / @empty).
  */
@@ -99,6 +103,8 @@ function compareRecipes(a: Recipe, b: Recipe, key: SortKey, dir: SortDir): numbe
 export class RecipeListComponent implements OnInit {
   private readonly recipeService = inject(RecipeService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   protected readonly recipes = signal<Recipe[]>([]);
   protected readonly loading = signal(true);
@@ -106,40 +112,37 @@ export class RecipeListComponent implements OnInit {
   protected readonly deleting = signal<number | null>(null);
   protected readonly viewMode = signal<ViewMode>(initialViewMode());
 
-  protected readonly searchText = signal('');
-  protected readonly activeTags = signal<ReadonlySet<string>>(new Set());
-  protected readonly sortKey = signal<SortKey>(initialSortKey());
-  protected readonly sortDir = signal<SortDir>(initialSortDir());
-
-  /** Distinct tags across all loaded recipes, sorted alphabetically. */
-  protected readonly availableTags = computed(() =>
-    [...new Set(this.recipes().flatMap((r) => r.tags ?? []))].sort(),
-  );
+  protected readonly searchText = signal(initialSearchText(this.route));
+  protected readonly activeTags = signal<ReadonlySet<string>>(initialActiveTags(this.route));
+  protected readonly sortKey = signal<SortKey>(initialSort(this.route).key);
+  protected readonly sortDir = signal<SortDir>(initialSort(this.route).dir);
+  protected readonly page = signal<number>(initialPage(this.route));
+  protected readonly totalPages = signal(1);
+  protected readonly totalElements = signal(0);
 
   /**
-   * `recipes()` filtered by search text (title/description substring, case
-   * insensitive) AND-ed with tag selection (OR-semantics among selected tags).
+   * Distinct tags seen across every response fetched so far this session.
+   * Never shrinks — the frontend no longer holds every recipe in memory, so
+   * this is the union of tags on pages actually fetched, not "every tag in
+   * the database". Tags that only exist on recipes not yet surfaced by a
+   * search/page won't appear as a filter chip until they are (a known rough
+   * edge, not a bug — see the spec for the deferred `/recipes/tags` fix).
    */
-  protected readonly filteredRecipes = computed(() => {
-    const search = this.searchText().trim().toLowerCase();
-    const tags = this.activeTags();
+  protected readonly availableTags = signal<ReadonlySet<string>>(new Set());
 
-    return this.recipes().filter((recipe) => {
-      const matchesSearch =
-        !search ||
-        recipe.title.toLowerCase().includes(search) ||
-        (recipe.description ?? '').toLowerCase().includes(search);
-      const matchesTags = tags.size === 0 || (recipe.tags ?? []).some((tag) => tags.has(tag));
-      return matchesSearch && matchesTags;
-    });
-  });
+  /** Whether a search term or tag filter is currently applied. */
+  protected readonly isFilterActive = computed(
+    () => this.searchText().trim().length > 0 || this.activeTags().size > 0,
+  );
 
-  /** `filteredRecipes()` sorted by the current sort key/direction; nulls sort last. */
-  protected readonly sortedRecipes = computed(() => {
-    const key = this.sortKey();
-    const dir = this.sortDir();
-    return [...this.filteredRecipes()].sort((a, b) => compareRecipes(a, b, key, dir));
-  });
+  constructor() {
+    // The initial searchText value is already covered by ngOnInit's direct
+    // loadRecipes() call, so skip toObservable's first (replayed) emission
+    // and only debounce genuine subsequent keystrokes.
+    toObservable(this.searchText)
+      .pipe(skip(1), debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.loadRecipes());
+  }
 
   ngOnInit(): void {
     this.loadRecipes();
@@ -148,12 +151,34 @@ export class RecipeListComponent implements OnInit {
   private loadRecipes(): void {
     this.loading.set(true);
     this.error.set(null);
+
+    const q = this.searchText().trim();
+    const tags = [...this.activeTags()];
+    const sort = `${this.sortKey()},${this.sortDir()}`;
+    const page = this.page();
+
+    this.syncQueryParams(q, tags, sort, page);
+
     this.recipeService
-      .getAll()
+      .getAll({
+        q: q || undefined,
+        tags: tags.length > 0 ? tags : undefined,
+        sort,
+        page,
+      })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (data) => {
-          this.recipes.set(data);
+        next: (response) => {
+          this.recipes.set(response.content);
+          this.totalPages.set(response.totalPages);
+          this.totalElements.set(response.totalElements);
+          this.availableTags.update((current) => {
+            const next = new Set(current);
+            for (const recipe of response.content) {
+              for (const tag of recipe.tags ?? []) next.add(tag);
+            }
+            return next;
+          });
           this.loading.set(false);
         },
         error: (err) => {
@@ -162,6 +187,21 @@ export class RecipeListComponent implements OnInit {
           console.error(err);
         },
       });
+  }
+
+  /** Reflects the current filter/sort/page state into the route's query params without adding a history entry. */
+  private syncQueryParams(q: string, tags: string[], sort: string, page: number): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        q: q || null,
+        tags: tags.length > 0 ? tags.join(',') : null,
+        sort,
+        page: page || null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   protected readonly totalTimeMinutes = totalTimeMinutes;
@@ -181,10 +221,13 @@ export class RecipeListComponent implements OnInit {
       }
       return next;
     });
+    this.page.set(0);
+    this.loadRecipes();
   }
 
   protected onSearchInput(event: Event): void {
     this.searchText.set((event.target as HTMLInputElement).value);
+    this.page.set(0);
   }
 
   /** If `key` is already the active sort key, flips direction; otherwise switches to `key` at `asc`. */
@@ -193,22 +236,38 @@ export class RecipeListComponent implements OnInit {
       const nextDir: SortDir = this.sortDir() === 'asc' ? 'desc' : 'asc';
       this.sortDir.set(nextDir);
       localStorage.setItem(SORT_DIR_STORAGE_KEY, nextDir);
-      return;
+    } else {
+      this.sortKey.set(key);
+      this.sortDir.set('asc');
+      localStorage.setItem(SORT_KEY_STORAGE_KEY, key);
+      localStorage.setItem(SORT_DIR_STORAGE_KEY, 'asc');
     }
 
-    this.sortKey.set(key);
-    this.sortDir.set('asc');
-    localStorage.setItem(SORT_KEY_STORAGE_KEY, key);
-    localStorage.setItem(SORT_DIR_STORAGE_KEY, 'asc');
+    this.page.set(0);
+    this.loadRecipes();
   }
 
   protected onSortKeyChange(event: Event): void {
     this.setSort((event.target as HTMLSelectElement).value as SortKey);
   }
 
+  protected prevPage(): void {
+    if (this.page() <= 0) return;
+    this.page.update((p) => p - 1);
+    this.loadRecipes();
+  }
+
+  protected nextPage(): void {
+    if (this.page() + 1 >= this.totalPages()) return;
+    this.page.update((p) => p + 1);
+    this.loadRecipes();
+  }
+
   protected clearFilters(): void {
     this.searchText.set('');
     this.activeTags.set(new Set());
+    this.page.set(0);
+    this.loadRecipes();
   }
 
   protected deleteRecipe(recipe: Recipe): void {

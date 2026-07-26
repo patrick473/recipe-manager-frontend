@@ -1,8 +1,9 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
+import { ListRecipesParams } from '../api/generated/model';
 import { RecipesService } from '../api/generated/recipes/recipes.service';
-import { Recipe, RecipeRequest } from '../models/recipe.model';
+import { Recipe, RecipePageResponse, RecipeRequest } from '../models/recipe.model';
 import { ConfirmDialogService } from '../shared/confirm-dialog/confirm-dialog.service';
 
 /**
@@ -30,13 +31,13 @@ export class RecipeService {
   /** Derived signal: whether there are any recipes loaded. */
   readonly hasRecipes = computed(() => this.recipeCount() > 0);
 
-  /** GET /recipes — list all recipes */
-  getAll(): Observable<Recipe[]> {
+  /** GET /recipes — list recipes matching the given filter/sort/pagination params */
+  getAll(params: ListRecipesParams): Observable<RecipePageResponse> {
     this.loading.set(true);
-    return this.api.listRecipes().pipe(
+    return this.api.listRecipes(params).pipe(
       tap({
-        next: (recipes) => {
-          this.recipeCount.set(recipes.length);
+        next: (response) => {
+          this.recipeCount.set(response.totalElements);
           this.loading.set(false);
         },
         error: () => this.loading.set(false),

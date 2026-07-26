@@ -11,3 +11,9 @@ export type Recipe = RecipeResponse;
  * Generated from openapi.yaml via Orval — see src/app/api/generated.
  */
 export type { RecipeRequest } from '../api/generated/model';
+
+/**
+ * Matches the RecipePageResponse DTO returned by GET /recipes.
+ * Generated from openapi.yaml via Orval — see src/app/api/generated.
+ */
+export type { RecipePageResponse } from '../api/generated/model';
