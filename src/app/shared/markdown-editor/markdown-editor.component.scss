@@ -1,0 +1,129 @@
+// ViewEncapsulation.None (see component doc comment) — every selector below is
+// nested under `.md-editor` so nothing leaks beyond this component's markup
+// plus the CodeMirror DOM it mounts inside `.md-editor__host`.
+
+.md-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+
+  &--disabled {
+    opacity: 0.6;
+  }
+
+  &__toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+
+  &__toolbar-btn {
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    border-radius: var(--radius-sm);
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--font-size-sm);
+    line-height: 1.4;
+    cursor: pointer;
+    transition: var(--transition-fast);
+
+    &:hover:not(:disabled) {
+      background: var(--color-surface-hover);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    &--mode {
+      margin-left: auto;
+      font-weight: 600;
+    }
+  }
+
+  // Grows with content instead of becoming an internally-scrolling box —
+  // matches the ~320px min-height of the `rows="16"` textarea it replaces.
+  &__host {
+    .cm-editor {
+      min-height: 320px;
+      height: auto;
+    }
+
+    .cm-scroller {
+      overflow: visible;
+      font-family: inherit;
+    }
+
+    // Live Preview decorations — purely visual, the underlying text is
+    // untouched and stays clickable/editable at all times.
+    .cm-mark-dim {
+      opacity: 0.4;
+    }
+
+    .cm-heading {
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .cm-h1 {
+      font-size: var(--font-size-2xl);
+    }
+    .cm-h2 {
+      font-size: var(--font-size-xl);
+    }
+    .cm-h3 {
+      font-size: var(--font-size-lg);
+    }
+    .cm-h4,
+    .cm-h5,
+    .cm-h6 {
+      font-size: var(--font-size-base);
+    }
+
+    .cm-strong {
+      font-weight: 700;
+    }
+
+    .cm-em {
+      font-style: italic;
+    }
+
+    .cm-inline-code {
+      font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      background: var(--color-surface-hover);
+      border-radius: var(--radius-sm);
+      padding: 0.1em 0.35em;
+      font-size: 0.9em;
+    }
+
+    .cm-link {
+      color: var(--color-primary);
+      text-decoration: underline;
+    }
+
+    // List markers get a CSS-only approximation of a real bullet/number glyph
+    // (color + weight) plus indentation on the line, rather than a widget
+    // replacement — keeps the raw `-`/`1.` text in place and editable.
+    .cm-list-mark {
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+
+    .cm-list-line {
+      padding-left: var(--space-2);
+    }
+
+    .cm-blockquote {
+      border-left: 3px solid var(--color-primary);
+      padding-left: var(--space-4);
+      color: var(--color-text-muted);
+    }
+
+    .cm-code-block {
+      background: var(--color-surface-hover);
+      font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+  }
+}

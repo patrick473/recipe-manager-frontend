@@ -56,18 +56,26 @@
         />
       </div>
 
+      <!-- Tags & Properties -->
+      <app-properties-panel
+        [editable]="true"
+        [tags]="form.controls.tags.value"
+        [prepTimeMinutes]="form.controls.prepTimeMinutes.value"
+        [cookTimeMinutes]="form.controls.cookTimeMinutes.value"
+        [servings]="form.controls.servings.value"
+        [tagSuggestions]="tagSuggestions()"
+        (tagsChange)="form.controls.tags.setValue($event)"
+        (prepTimeMinutesChange)="form.controls.prepTimeMinutes.setValue($event)"
+        (cookTimeMinutesChange)="form.controls.cookTimeMinutes.setValue($event)"
+        (servingsChange)="form.controls.servings.setValue($event)"
+      />
+
       <!-- Content (Markdown) -->
       <div class="field">
         <label class="field-label" for="content"
           >Content (Markdown) <span class="required-marker">*</span></label
         >
-        <textarea
-          id="content"
-          class="field-input"
-          formControlName="content"
-          rows="16"
-          placeholder="## Ingredients&#10;- ...&#10;&#10;## Steps&#10;1. ..."
-        ></textarea>
+        <app-markdown-editor id="content" formControlName="content" />
         @if (isInvalid('content')) {
           <p class="field-error">Content is required.</p>
         }

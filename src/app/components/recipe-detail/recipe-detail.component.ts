@@ -16,6 +16,7 @@ import { RecipeService } from '../../services/recipe.service';
 import { ButtonDirective } from '../../shared/button.directive';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { LoaderComponent } from '../../shared/loader/loader.component';
+import { PropertiesPanelComponent } from '../../shared/properties-panel/properties-panel.component';
 
 /**
  * Shows a single recipe with:
@@ -27,7 +28,14 @@ import { LoaderComponent } from '../../shared/loader/loader.component';
  */
 @Component({
   selector: 'app-recipe-detail',
-  imports: [RouterLink, DatePipe, ButtonDirective, IconComponent, LoaderComponent],
+  imports: [
+    RouterLink,
+    DatePipe,
+    ButtonDirective,
+    IconComponent,
+    LoaderComponent,
+    PropertiesPanelComponent,
+  ],
   templateUrl: './recipe-detail.component.html',
   styleUrl: './recipe-detail.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

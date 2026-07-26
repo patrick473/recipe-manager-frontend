@@ -19,6 +19,8 @@ import { Recipe } from '../../models/recipe.model';
 import { RecipeService } from '../../services/recipe.service';
 import { ButtonDirective } from '../../shared/button.directive';
 import { LoaderComponent } from '../../shared/loader/loader.component';
+import { MarkdownEditorComponent } from '../../shared/markdown-editor/markdown-editor.component';
+import { PropertiesPanelComponent } from '../../shared/properties-panel/properties-panel.component';
 
 /**
  * Shared create/edit form for recipes.
@@ -34,7 +36,14 @@ import { LoaderComponent } from '../../shared/loader/loader.component';
  */
 @Component({
   selector: 'app-recipe-form',
-  imports: [ReactiveFormsModule, RouterLink, ButtonDirective, LoaderComponent],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    ButtonDirective,
+    LoaderComponent,
+    MarkdownEditorComponent,
+    PropertiesPanelComponent,
+  ],
   templateUrl: './recipe-form.component.html',
   styleUrl: './recipe-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -50,10 +59,18 @@ export class RecipeFormComponent implements OnInit {
     title: FormControl<string>;
     description: FormControl<string>;
     content: FormControl<string>;
+    tags: FormControl<string[]>;
+    prepTimeMinutes: FormControl<number | null>;
+    cookTimeMinutes: FormControl<number | null>;
+    servings: FormControl<number | null>;
   }> = this.fb.nonNullable.group({
     title: ['', [Validators.required, Validators.maxLength(255)]],
     description: [''],
     content: ['', Validators.required],
+    tags: this.fb.nonNullable.control<string[]>([]),
+    prepTimeMinutes: this.fb.control<number | null>(null),
+    cookTimeMinutes: this.fb.control<number | null>(null),
+    servings: this.fb.control<number | null>(null),
   });
 
   protected readonly isEdit = signal(false);
@@ -62,8 +79,20 @@ export class RecipeFormComponent implements OnInit {
   protected readonly loadError = signal<string | null>(null);
   protected readonly submitting = signal(false);
   protected readonly submitError = signal<string | null>(null);
+  protected readonly tagSuggestions = signal<string[]>([]);
 
   ngOnInit(): void {
+    this.recipeService
+      .getAll()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (recipes) => {
+          const allTags = recipes.flatMap((r) => r.tags ?? []);
+          this.tagSuggestions.set([...new Set(allTags)].sort());
+        },
+        error: (err) => console.error(err),
+      });
+
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isEdit.set(true);
@@ -78,6 +107,10 @@ export class RecipeFormComponent implements OnInit {
               title: data.title,
               description: data.description ?? '',
               content: data.content,
+              tags: data.tags ?? [],
+              prepTimeMinutes: data.prepTimeMinutes ?? null,
+              cookTimeMinutes: data.cookTimeMinutes ?? null,
+              servings: data.servings ?? null,
             });
             this.loading.set(false);
           },
@@ -96,8 +129,17 @@ export class RecipeFormComponent implements OnInit {
       return;
     }
 
-    const { title, description, content } = this.form.getRawValue();
-    const request = { title, description: description || null, content };
+    const { title, description, content, tags, prepTimeMinutes, cookTimeMinutes, servings } =
+      this.form.getRawValue();
+    const request = {
+      title,
+      description: description || null,
+      content,
+      tags,
+      prepTimeMinutes,
+      cookTimeMinutes,
+      servings,
+    };
 
     this.submitting.set(true);
     this.submitError.set(null);
