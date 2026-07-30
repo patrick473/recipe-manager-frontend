@@ -93,3 +93,26 @@
 .loading-block {
   padding: var(--space-8) 0;
 }
+
+@media print {
+  :host {
+    padding: 0;
+  }
+
+  .breadcrumbs,
+  .detail-actions,
+  .scale-control {
+    display: none !important;
+  }
+
+  .detail-card {
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  .detail-hero {
+    break-inside: avoid;
+  }
+}
