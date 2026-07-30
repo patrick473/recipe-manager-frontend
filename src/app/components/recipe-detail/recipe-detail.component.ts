@@ -4,6 +4,7 @@ import {
   Component,
   DestroyRef,
   OnInit,
+  computed,
   inject,
   signal,
 } from '@angular/core';
@@ -16,9 +17,15 @@ import { RecipeService } from '../../services/recipe.service';
 import { ButtonDirective } from '../../shared/button.directive';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { resolveImageUrl } from '../../shared/image-url.util';
+import {
+  hasScalableIngredients,
+  scaleIngredientsMarkdown,
+} from '../../shared/ingredient-scaling.util';
 import { LoaderComponent } from '../../shared/loader/loader.component';
 import { PropertiesPanelComponent } from '../../shared/properties-panel/properties-panel.component';
 import { totalTimeMinutes } from '../../shared/recipe-time.util';
+
+const MULTIPLIER_OPTIONS = [0.5, 1, 1.5, 2, 3];
 
 /**
  * Shows a single recipe with:
@@ -50,10 +57,14 @@ export class RecipeDetailComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly recipe = signal<Recipe | null>(null);
-  protected readonly renderedContent = signal<SafeHtml>('');
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly deleting = signal(false);
+
+  // Not persisted — resets to 1 whenever a different recipe loads. See
+  // INGREDIENT_SCALING_SPEC.md for why this stays view-only state.
+  protected readonly scaleFactor = signal(1);
+  protected readonly multiplierOptions = MULTIPLIER_OPTIONS;
 
   // Set by RecipeFormComponent's create-mode navigation when the recipe was
   // created successfully but the follow-up image upload failed — surfaced
@@ -64,6 +75,25 @@ export class RecipeDetailComponent implements OnInit {
   protected readonly totalTimeMinutes = totalTimeMinutes;
   protected readonly resolveImageUrl = resolveImageUrl;
 
+  protected readonly canScale = computed(() =>
+    hasScalableIngredients(this.recipe()?.content ?? ''),
+  );
+
+  /** Rounded target servings shown/edited by the servings stepper; null when the recipe has no stored servings. */
+  protected readonly targetServings = computed(() => {
+    const servings = this.recipe()?.servings;
+    return servings ? Math.round(servings * this.scaleFactor()) : null;
+  });
+
+  protected readonly renderedContent = computed<SafeHtml>(() => {
+    const recipe = this.recipe();
+    if (!recipe) return '';
+
+    const scaledContent = scaleIngredientsMarkdown(recipe.content, this.scaleFactor());
+    const html = marked.parse(scaledContent) as string;
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  });
+
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     this.recipeService
@@ -72,8 +102,7 @@ export class RecipeDetailComponent implements OnInit {
       .subscribe({
         next: (data) => {
           this.recipe.set(data);
-          const html = marked.parse(data.content) as string;
-          this.renderedContent.set(this.sanitizer.bypassSecurityTrustHtml(html));
+          this.scaleFactor.set(1);
           this.loading.set(false);
         },
         error: (err) => {
@@ -84,6 +113,17 @@ export class RecipeDetailComponent implements OnInit {
           console.error(err);
         },
       });
+  }
+
+  protected onServingsTargetChange(target: number): void {
+    const recipe = this.recipe();
+    if (!recipe?.servings || target < 1) return;
+
+    this.scaleFactor.set(target / recipe.servings);
+  }
+
+  protected onMultiplierSelect(factor: number): void {
+    this.scaleFactor.set(factor);
   }
 
   protected cloneRecipe(): void {

@@ -49,6 +49,35 @@
   margin: var(--space-5) 0;
 }
 
+.scale-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+
+.scale-control-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.stepper-value {
+  min-width: 1.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.multiplier-group {
+  display: flex;
+  gap: var(--space-2);
+}
+
 .loading-block {
   padding: var(--space-8) 0;
 }
