@@ -44,12 +44,11 @@ alongside Edit/Delete.
   (`recipe-detail.component.ts` and its spec), worked cleanly with no
   merge conflict or lost edit — each agent's diff landed in a different
   region of the file (constructor injection + one line in `ngOnInit` for
-  Part 3; template/`.html` changes plus a separate injected field for Part
-  2) and both re-read the file before editing rather than working from a
+  Part 3; template/`.html` changes plus a separate injected field for Part 2) and both re-read the file before editing rather than working from a
   stale snapshot, so the second agent to finish saw and preserved the
   first agent's already-landed change. Concurrent dispatch onto shared
   files is workable here specifically because the spec had already
-  partitioned the *logical* change (a signal read/toggle vs. a one-line
+  partitioned the _logical_ change (a signal read/toggle vs. a one-line
   side effect in an existing success handler) into non-overlapping
   concerns, even though the file-level diffs weren't disjoint — dispatching
   two agents at genuinely conflicting logical changes to the same file
@@ -61,7 +60,7 @@ alongside Edit/Delete.
   current working directory — Node's ESM resolver walks up from the
   script's own path, not `cwd`, to find `node_modules`. A script written to
   the session scratchpad directory 404s on `import { chromium } from
-  'playwright'` even when run with `cwd` already set to the frontend
+'playwright'` even when run with `cwd` already set to the frontend
   directory; copying the script into `recipe-manager-frontend/` (and
   deleting it afterward) fixed it immediately. Worth writing verification
   scripts directly into the frontend directory from the start next time,

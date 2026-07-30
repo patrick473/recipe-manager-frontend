@@ -162,7 +162,10 @@ This spec holds to that framing on both counts:
     [attr.aria-label]="favoritesService.isFavorite(recipe.id) ? 'Remove from favorites' : 'Add to favorites'"
     (click)="favoritesService.toggle(recipe.id)"
   >
-    <app-icon [name]="favoritesService.isFavorite(recipe.id) ? 'favorite' : 'favorite_border'" [size]="14" />
+    <app-icon
+      [name]="favoritesService.isFavorite(recipe.id) ? 'favorite' : 'favorite_border'"
+      [size]="14"
+    />
   </button>
   ```
   (size `16` to match the detail page's existing icon sizing on that row).
