@@ -48,7 +48,7 @@ section byte-for-byte unchanged, and threw no console errors.
   `scaleIngredientsMarkdown(content, 2)` against `scaleIngredientsMarkdown(content, 1)`
   and report "scalable" if they differ. This has a latent false-negative:
   the fraction formatter rounds to the nearest eighth, so a fraction finer
-  than an eighth (e.g. a `1/16`) can normalize to the *same* displayed
+  than an eighth (e.g. a `1/16`) can normalize to the _same_ displayed
   eighth at both factor 1 and factor 2, making the diff report "not
   scalable" for a line that actually is. No test caught this — none of the
   written tests used a denominator finer than eighths. Caught by reasoning

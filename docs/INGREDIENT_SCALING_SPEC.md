@@ -64,9 +64,9 @@ is the actual fix if they ever become painful enough to matter.
   an `## Ingredients` heading followed by a blank line and a `- `-bulleted
   list, one ingredient per line, then an `## Instructions` heading with a
   numbered list. Quantity formats actually in use: plain integers (`3 large
-  eggs`), decimals is absent but would read the same way, simple fractions
+eggs`), decimals is absent but would read the same way, simple fractions
   (`1/2 cup crushed San Marzano tomatoes`), mixed numbers (`1 1/2 cups
-  all-purpose flour`), and numbers glued directly to a metric unit with no
+all-purpose flour`), and numbers glued directly to a metric unit with no
   space (`400g spaghetti`, `1kg ripe tomatoes`). A meaningful chunk of lines
   have **no** leading quantity at all (`salt to taste`, `pinch of salt`,
   `fresh basil leaves`, `condiments to taste`) — those need to be left
@@ -77,7 +77,7 @@ is the actual fix if they ever become painful enough to matter.
   result into a plain `renderedContent` signal — it's computed once at load
   time, not reactively derived from `content` today.
 - `recipe-detail.component.html`: `<app-properties-panel [editable]="false"
-  ... [servings]="r.servings ?? null" />` displays the recipe's stored
+... [servings]="r.servings ?? null" />` displays the recipe's stored
   servings count read-only; the Markdown body renders separately via
   `[innerHTML]="renderedContent()"`. `PropertiesPanelComponent`
   ([properties-panel.component.ts](../src/app/shared/properties-panel/properties-panel.component.ts))
@@ -101,9 +101,9 @@ is the actual fix if they ever become painful enough to matter.
 - Within that section, only bullet-list lines (`^[-*]\s+`) are candidates.
   For each one, the **leading token** is tested against a quantity pattern:
   an integer, a decimal, a simple fraction (`1/2`), or a mixed number (`1
-  1/2`), optionally glued directly to a unit with no space (`400g`, `1kg`).
+1/2`), optionally glued directly to a unit with no space (`400g`, `1kg`).
   A line whose first token doesn't match — `salt to taste`, `pinch of
-  salt`, `fresh basil leaves` — is passed through unchanged. Everything
+salt`, `fresh basil leaves` — is passed through unchanged. Everything
   after the matched quantity (unit, descriptors, ingredient name) is also
   passed through unchanged; only the quantity token itself is replaced.
 - **Formatting the scaled result** follows the convention the original line
@@ -143,7 +143,7 @@ is the actual fix if they ever become painful enough to matter.
     `formatScaledQuantity(value: number, wasFraction: boolean): string` as
     the two directly-unit-testable halves of the line rewrite.
   - Fraction rounding uses a fixed table of eighths (`0, 1/8, 1/4, 3/8,
-    1/2, 5/8, 3/4, 7/8`) plus whole numbers — pick the nearest one, same
+1/2, 5/8, 3/4, 7/8`) plus whole numbers — pick the nearest one, same
     idea as a kitchen measuring-cup set.
 - Regex for the leading token (illustrative, not final):
   `/^(\d+\s+\d+\/\d+|\d+\/\d+|\d+\.\d+|\d+)(?=[a-zA-Z\s]|$)/` — matches
@@ -174,7 +174,7 @@ is the actual fix if they ever become painful enough to matter.
     a value the user already sees in the properties panel.
   - **`servings` is `null`:** no baseline to compute a ratio against, so
     instead a plain multiplier control — a segmented button group (`0.5×
-    1× 1.5× 2× 3×`) — sets the scale factor directly.
+1× 1.5× 2× 3×`) — sets the scale factor directly.
 - Changing the control re-renders only the ingredient quantities; the rest
   of the rendered Markdown (instructions, any prose) is byte-for-byte the
   same as before, since `scaleIngredientsMarkdown` only ever rewrites lines
@@ -198,7 +198,7 @@ is the actual fix if they ever become painful enough to matter.
   - `renderedContent` changes from a plain signal set once in the
     subscribe callback to a `computed()` depending on both `recipe` and
     `scaleFactor`: `marked.parse(scaleIngredientsMarkdown(r.content,
-    scaleFactor()))`, then the same `sanitizer.bypassSecurityTrustHtml()`
+scaleFactor()))`, then the same `sanitizer.bypassSecurityTrustHtml()`
     call as today. The subscribe callback keeps setting `recipe` and
     `loading`/`error`; it no longer computes HTML directly.
   - `onServingsTargetChange(target: number)` — guards `target >= 1`, sets
@@ -210,7 +210,7 @@ is the actual fix if they ever become painful enough to matter.
     stepper shows/edits this rounded integer, not the raw factor.
 - `recipe-detail.component.html`: new `@if (canScale())` block between the
   properties panel and the divider, with an inner `@if (r.servings; as s)
-  { ...stepper... } @else { ...segmented buttons... }`.
+{ ...stepper... } @else { ...segmented buttons... }`.
 - CSS: small `.scale-control` block in `recipe-detail.component.scss`
   reusing existing button/stepper visual patterns already in the app
   rather than introducing new ones.
@@ -240,7 +240,7 @@ is the actual fix if they ever become painful enough to matter.
     clamped rather than emitted as `0`.
   - `scaleIngredientsMarkdown`: a full recipe body scales every bulleted
     quantity line inside `## Ingredients`; non-quantity lines (`salt to
-    taste`) pass through byte-for-byte; numbered `## Instructions` steps
+taste`) pass through byte-for-byte; numbered `## Instructions` steps
     are never touched even though they also start with digits; a recipe
     with no `## Ingredients` heading returns `content` unchanged; a factor
     of `1` returns output equal to the input (modulo the eighth-rounding
