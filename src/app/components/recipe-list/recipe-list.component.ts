@@ -10,8 +10,18 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { debounceTime, distinctUntilChanged, skip } from 'rxjs/operators';
+import { Observable, forkJoin, of } from 'rxjs';
+import {
+  catchError,
+  debounceTime,
+  distinctUntilChanged,
+  map,
+  skip,
+  switchMap,
+} from 'rxjs/operators';
 import { Recipe } from '../../models/recipe.model';
+import { FavoritesService } from '../../services/favorites.service';
+import { RecentlyViewedService } from '../../services/recently-viewed.service';
 import { RecipeService } from '../../services/recipe.service';
 import { ButtonDirective } from '../../shared/button.directive';
 import { IconComponent } from '../../shared/icon/icon.component';
@@ -107,6 +117,9 @@ export class RecipeListComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
+  protected readonly favoritesService = inject(FavoritesService);
+  protected readonly recentlyViewedService = inject(RecentlyViewedService);
+
   protected readonly recipes = signal<Recipe[]>([]);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
@@ -136,6 +149,11 @@ export class RecipeListComponent implements OnInit {
     () => this.searchText().trim().length > 0 || this.activeTags().size > 0,
   );
 
+  /** Recipes backing the "Favorites" strip — refetched whenever `favoritesService.favoriteIds` changes. */
+  protected readonly favoriteRecipes = signal<Recipe[]>([]);
+  /** Recipes backing the "Recently viewed" strip — refetched whenever `recentlyViewedService.recentIds` changes. */
+  protected readonly recentRecipes = signal<Recipe[]>([]);
+
   constructor() {
     // The initial searchText value is already covered by ngOnInit's direct
     // loadRecipes() call, so skip toObservable's first (replayed) emission
@@ -143,6 +161,20 @@ export class RecipeListComponent implements OnInit {
     toObservable(this.searchText)
       .pipe(skip(1), debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.loadRecipes());
+
+    toObservable(this.favoritesService.favoriteIds)
+      .pipe(
+        switchMap((ids) => this.fetchByIds([...ids])),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((recipes) => this.favoriteRecipes.set(recipes));
+
+    toObservable(this.recentlyViewedService.recentIds)
+      .pipe(
+        switchMap((ids) => this.fetchByIds([...ids])),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((recipes) => this.recentRecipes.set(recipes));
   }
 
   ngOnInit(): void {
@@ -289,5 +321,39 @@ export class RecipeListComponent implements OnInit {
           console.error(err);
         },
       });
+  }
+
+  /**
+   * Fetches each of `ids` individually via `RecipeService.getById` (fanned
+   * out with `forkJoin`, since there's no bulk-by-ids endpoint) and returns
+   * the recipes that resolved, preserving `ids`' order. An id whose fetch
+   * errors (e.g. the recipe was deleted since being favorited/viewed) is
+   * pruned from the underlying store via `pruneDeadId` and dropped from the
+   * result rather than failing the whole batch.
+   */
+  private fetchByIds(ids: number[]): Observable<Recipe[]> {
+    if (ids.length === 0) return of([]);
+    return forkJoin(
+      ids.map((id) =>
+        this.recipeService.getById(id).pipe(
+          catchError(() => {
+            this.pruneDeadId(id);
+            return of(null);
+          }),
+        ),
+      ),
+    ).pipe(map((results) => results.filter((r): r is Recipe => r !== null)));
+  }
+
+  /** Removes a stale id (its recipe no longer exists) from both stores; each is a safe no-op if the id isn't present there. */
+  private pruneDeadId(id: number): void {
+    if (this.favoritesService.isFavorite(id)) {
+      this.favoritesService.toggle(id);
+    }
+    this.recentlyViewedService.remove(id);
+  }
+
+  protected clearRecentlyViewed(): void {
+    this.recentlyViewedService.clear();
   }
 }

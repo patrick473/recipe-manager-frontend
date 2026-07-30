@@ -30,6 +30,82 @@
   </div>
 </div>
 
+@if (recentRecipes().length > 0) {
+  <section class="recipe-strip" aria-label="Recently viewed">
+    <div class="recipe-strip-header">
+      <h3 class="recipe-strip-title">Recently viewed</h3>
+      <button
+        type="button"
+        appButton
+        appearance="secondary"
+        size="s"
+        (click)="clearRecentlyViewed()"
+      >
+        Clear
+      </button>
+    </div>
+    <div class="recipe-strip-row">
+      @for (recipe of recentRecipes(); track recipe.id) {
+        <div class="recipe-strip-card">
+          <a [routerLink]="['/recipes', recipe.id]" class="recipe-strip-card-link">
+            @if (resolveImageUrl(recipe.imageUrl); as thumbSrc) {
+              <img class="recipe-strip-card-thumb" [src]="thumbSrc" [alt]="recipe.title" />
+            } @else {
+              <div class="recipe-strip-card-thumb image-placeholder image-placeholder-sm">
+                <app-icon name="image" [size]="16" />
+              </div>
+            }
+            <p class="recipe-strip-card-title">{{ recipe.title }}</p>
+          </a>
+        </div>
+      }
+    </div>
+  </section>
+}
+
+@if (favoriteRecipes().length > 0) {
+  <section class="recipe-strip" aria-label="Favorites">
+    <div class="recipe-strip-header">
+      <h3 class="recipe-strip-title">Favorites</h3>
+    </div>
+    <div class="recipe-strip-row">
+      @for (recipe of favoriteRecipes(); track recipe.id) {
+        <div class="recipe-strip-card">
+          <a [routerLink]="['/recipes', recipe.id]" class="recipe-strip-card-link">
+            @if (resolveImageUrl(recipe.imageUrl); as thumbSrc) {
+              <img class="recipe-strip-card-thumb" [src]="thumbSrc" [alt]="recipe.title" />
+            } @else {
+              <div class="recipe-strip-card-thumb image-placeholder image-placeholder-sm">
+                <app-icon name="image" [size]="16" />
+              </div>
+            }
+            <p class="recipe-strip-card-title">{{ recipe.title }}</p>
+          </a>
+          <button
+            type="button"
+            appButton
+            appearance="secondary"
+            size="s"
+            [iconOnly]="true"
+            class="recipe-strip-card-favorite"
+            [class.is-favorite]="favoritesService.isFavorite(recipe.id)"
+            [attr.aria-pressed]="favoritesService.isFavorite(recipe.id)"
+            [attr.aria-label]="
+              favoritesService.isFavorite(recipe.id) ? 'Remove from favorites' : 'Add to favorites'
+            "
+            (click)="favoritesService.toggle(recipe.id)"
+          >
+            <app-icon
+              [name]="favoritesService.isFavorite(recipe.id) ? 'favorite' : 'favorite_border'"
+              [size]="14"
+            />
+          </button>
+        </div>
+      }
+    </div>
+  </section>
+}
+
 @if (!loading() && !(recipes().length === 0 && !isFilterActive())) {
   <div class="recipe-list-toolbar">
     <input
@@ -151,6 +227,26 @@
               Edit
             </a>
             <button
+              type="button"
+              appButton
+              appearance="secondary"
+              size="s"
+              [iconOnly]="true"
+              [class.is-favorite]="favoritesService.isFavorite(recipe.id)"
+              [attr.aria-pressed]="favoritesService.isFavorite(recipe.id)"
+              [attr.aria-label]="
+                favoritesService.isFavorite(recipe.id)
+                  ? 'Remove from favorites'
+                  : 'Add to favorites'
+              "
+              (click)="favoritesService.toggle(recipe.id)"
+            >
+              <app-icon
+                [name]="favoritesService.isFavorite(recipe.id) ? 'favorite' : 'favorite_border'"
+                [size]="14"
+              />
+            </button>
+            <button
               appButton
               appearance="secondary-destructive"
               size="s"
@@ -201,6 +297,26 @@
                 <app-icon name="edit" [size]="14" />
                 Edit
               </a>
+              <button
+                type="button"
+                appButton
+                appearance="secondary"
+                size="s"
+                [iconOnly]="true"
+                [class.is-favorite]="favoritesService.isFavorite(recipe.id)"
+                [attr.aria-pressed]="favoritesService.isFavorite(recipe.id)"
+                [attr.aria-label]="
+                  favoritesService.isFavorite(recipe.id)
+                    ? 'Remove from favorites'
+                    : 'Add to favorites'
+                "
+                (click)="favoritesService.toggle(recipe.id)"
+              >
+                <app-icon
+                  [name]="favoritesService.isFavorite(recipe.id) ? 'favorite' : 'favorite_border'"
+                  [size]="14"
+                />
+              </button>
               <button
                 appButton
                 appearance="secondary-destructive"

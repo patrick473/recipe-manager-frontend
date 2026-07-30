@@ -3,6 +3,8 @@ import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angul
 import { Subject, of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Recipe, RecipePageResponse } from '../../models/recipe.model';
+import { FavoritesService } from '../../services/favorites.service';
+import { RecentlyViewedService } from '../../services/recently-viewed.service';
 import { RecipeService } from '../../services/recipe.service';
 import { RecipeListComponent } from './recipe-list.component';
 
@@ -79,6 +81,7 @@ describe('RecipeListComponent', () => {
   let fakeRecipeService: {
     getAll: ReturnType<typeof vi.fn>;
     deleteWithConfirm: ReturnType<typeof vi.fn>;
+    getById: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
@@ -87,6 +90,20 @@ describe('RecipeListComponent', () => {
     fakeRecipeService = {
       getAll: vi.fn(),
       deleteWithConfirm: vi.fn(),
+      // Default: resolve any id to a minimal placeholder recipe, so the
+      // favorites/recently-viewed strip pipelines (which call getById for
+      // every stored id) don't blow up in tests that never touch those
+      // stores. Tests exercising the strips override this per-case.
+      getById: vi.fn((id: number) =>
+        of({
+          id,
+          title: `Recipe ${id}`,
+          description: null,
+          content: '',
+          createdAt: '2024-01-01T10:00:00',
+          updatedAt: '2024-01-01T10:00:00',
+        } as Recipe),
+      ),
     };
 
     TestBed.configureTestingModule({
@@ -255,6 +272,16 @@ describe('RecipeListComponent', () => {
       return link as HTMLAnchorElement;
     }
 
+    function findFavoriteButton(element: HTMLElement): HTMLButtonElement {
+      const button = element.querySelector(
+        'button[aria-label="Add to favorites"], button[aria-label="Remove from favorites"]',
+      );
+      if (!button) {
+        throw new Error('Favorite button not found');
+      }
+      return button as HTMLButtonElement;
+    }
+
     it('defaults to grid mode when localStorage has no stored preference', () => {
       fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
 
@@ -351,6 +378,34 @@ describe('RecipeListComponent', () => {
         const editLink = findEditLink(fixture.nativeElement);
 
         expect(editLink.getAttribute('href')).toBe(`/recipes/${firstRecipe.id}/edit`);
+      });
+
+      it('reflects FavoritesService state on the favorite button and updates it on click', () => {
+        const fixture = createFixtureInMode(mode);
+        const favoritesService = TestBed.inject(FavoritesService);
+
+        const favoriteButton = findFavoriteButton(fixture.nativeElement);
+
+        expect(favoritesService.isFavorite(firstRecipe.id)).toBe(false);
+        expect(favoriteButton.getAttribute('aria-pressed')).toBe('false');
+        expect(favoriteButton.getAttribute('aria-label')).toBe('Add to favorites');
+        expect(favoriteButton.querySelector('.material-icons')?.textContent).toBe(
+          'favorite_border',
+        );
+
+        favoriteButton.click();
+        fixture.detectChanges();
+
+        expect(favoritesService.isFavorite(firstRecipe.id)).toBe(true);
+        expect(favoriteButton.getAttribute('aria-pressed')).toBe('true');
+        expect(favoriteButton.getAttribute('aria-label')).toBe('Remove from favorites');
+        expect(favoriteButton.querySelector('.material-icons')?.textContent).toBe('favorite');
+
+        favoriteButton.click();
+        fixture.detectChanges();
+
+        expect(favoritesService.isFavorite(firstRecipe.id)).toBe(false);
+        expect(favoriteButton.getAttribute('aria-pressed')).toBe('false');
       });
     });
   });
@@ -812,6 +867,158 @@ describe('RecipeListComponent', () => {
           replaceUrl: true,
         }),
       );
+    });
+  });
+
+  describe('favorites and recently-viewed strips', () => {
+    function fakeRecipe(id: number, title = `Strip Recipe ${id}`): Recipe {
+      return {
+        id,
+        title,
+        description: null,
+        content: '## Ingredients\n- Test',
+        createdAt: '2024-01-01T10:00:00',
+        updatedAt: '2024-01-01T10:00:00',
+      };
+    }
+
+    it('renders neither strip when there are no favorites or recently-viewed ids', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      fixture.detectChanges();
+
+      const element = fixture.nativeElement as HTMLElement;
+      expect(element.querySelector('section[aria-label="Favorites"]')).toBeNull();
+      expect(element.querySelector('section[aria-label="Recently viewed"]')).toBeNull();
+    });
+
+    it('renders the Recently viewed strip only once RecentlyViewedService has an id, with its title', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
+      fakeRecipeService.getById.mockImplementation((id: number) =>
+        of(fakeRecipe(id, 'Grandma’s Chili')),
+      );
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      fixture.detectChanges();
+      expect(
+        (fixture.nativeElement as HTMLElement).querySelector(
+          'section[aria-label="Recently viewed"]',
+        ),
+      ).toBeNull();
+
+      const recentlyViewedService = TestBed.inject(RecentlyViewedService);
+      recentlyViewedService.record(42);
+      fixture.detectChanges();
+
+      const section = (fixture.nativeElement as HTMLElement).querySelector(
+        'section[aria-label="Recently viewed"]',
+      );
+      expect(section).toBeTruthy();
+      expect(section?.textContent).toContain('Grandma’s Chili');
+    });
+
+    it('updates the Favorites strip with no manual reload when a card favorite button is toggled', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
+      fakeRecipeService.getById.mockImplementation((id: number) => of(fakeRecipe(id)));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      const element = fixture.nativeElement as HTMLElement;
+      fixture.detectChanges();
+
+      expect(element.querySelector('section[aria-label="Favorites"]')).toBeNull();
+
+      const cardFavoriteButton = element.querySelector(
+        'button[aria-label="Add to favorites"]',
+      ) as HTMLButtonElement;
+      cardFavoriteButton.click();
+      fixture.detectChanges();
+
+      const favoritesSection = element.querySelector('section[aria-label="Favorites"]');
+      expect(favoritesSection).toBeTruthy();
+      expect(favoritesSection?.textContent).toContain(fakeRecipe(mockRecipes[0].id).title);
+
+      // Un-favoriting from the strip's own heart button (not the main card)
+      // removes it from the strip immediately too.
+      const stripHeartButton = favoritesSection?.querySelector(
+        'button[aria-label="Remove from favorites"]',
+      ) as HTMLButtonElement;
+      stripHeartButton.click();
+      fixture.detectChanges();
+
+      expect(TestBed.inject(FavoritesService).isFavorite(mockRecipes[0].id)).toBe(false);
+      expect(element.querySelector('section[aria-label="Favorites"]')).toBeNull();
+    });
+
+    it('drops a stale favorited id whose getById() 404s from the strip and prunes it from FavoritesService, without affecting the other favorite', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
+      fakeRecipeService.getById.mockImplementation((id: number) =>
+        id === 999 ? throwError(() => new Error('404')) : of(fakeRecipe(id)),
+      );
+
+      const favoritesService = TestBed.inject(FavoritesService);
+      favoritesService.toggle(999);
+      favoritesService.toggle(mockRecipes[1].id);
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      fixture.detectChanges();
+
+      const element = fixture.nativeElement as HTMLElement;
+      const favoritesSection = element.querySelector('section[aria-label="Favorites"]');
+      expect(favoritesSection).toBeTruthy();
+      expect(favoritesSection?.textContent).toContain(fakeRecipe(mockRecipes[1].id).title);
+      expect(favoritesSection?.textContent).not.toContain('Recipe 999');
+
+      expect(favoritesService.isFavorite(999)).toBe(false);
+      expect(favoritesService.isFavorite(mockRecipes[1].id)).toBe(true);
+    });
+
+    it('drops a stale recently-viewed id whose getById() 404s from the strip and prunes it from RecentlyViewedService', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
+      fakeRecipeService.getById.mockImplementation((id: number) =>
+        id === 999 ? throwError(() => new Error('404')) : of(fakeRecipe(id)),
+      );
+
+      const recentlyViewedService = TestBed.inject(RecentlyViewedService);
+      recentlyViewedService.record(999);
+      recentlyViewedService.record(mockRecipes[1].id);
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      fixture.detectChanges();
+
+      const element = fixture.nativeElement as HTMLElement;
+      const section = element.querySelector('section[aria-label="Recently viewed"]');
+      expect(section).toBeTruthy();
+      expect(section?.textContent).toContain(fakeRecipe(mockRecipes[1].id).title);
+      expect(section?.textContent).not.toContain('Recipe 999');
+
+      expect(recentlyViewedService.recentIds()).toEqual([mockRecipes[1].id]);
+    });
+
+    it('the Clear button empties the Recently viewed strip and RecentlyViewedService storage', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
+      fakeRecipeService.getById.mockImplementation((id: number) => of(fakeRecipe(id)));
+
+      const recentlyViewedService = TestBed.inject(RecentlyViewedService);
+      recentlyViewedService.record(mockRecipes[0].id);
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      const element = fixture.nativeElement as HTMLElement;
+      fixture.detectChanges();
+
+      expect(element.querySelector('section[aria-label="Recently viewed"]')).toBeTruthy();
+
+      const clearButton = Array.from(
+        element.querySelectorAll('section[aria-label="Recently viewed"] button'),
+      ).find((btn) => btn.textContent?.trim() === 'Clear') as HTMLButtonElement;
+      expect(clearButton).toBeTruthy();
+
+      clearButton.click();
+      fixture.detectChanges();
+
+      expect(element.querySelector('section[aria-label="Recently viewed"]')).toBeNull();
+      expect(recentlyViewedService.recentIds()).toEqual([]);
+      expect(localStorage.getItem('recipeRecentlyViewed')).toBe('[]');
     });
   });
 });

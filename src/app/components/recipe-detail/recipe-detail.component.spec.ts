@@ -4,6 +4,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Recipe } from '../../models/recipe.model';
+import { FavoritesService } from '../../services/favorites.service';
+import { RecentlyViewedService } from '../../services/recently-viewed.service';
 import { RecipeService } from '../../services/recipe.service';
 import { RecipeDetailComponent } from './recipe-detail.component';
 
@@ -25,6 +27,7 @@ describe('RecipeDetailComponent', () => {
   };
   let fakeRouter: { navigate: ReturnType<typeof vi.fn> };
   let fakeSanitizer: { bypassSecurityTrustHtml: ReturnType<typeof vi.fn> };
+  let fakeRecentlyViewedService: { record: ReturnType<typeof vi.fn> };
 
   function configure(routeId: string | null = '1') {
     const fakeRoute = {
@@ -41,11 +44,14 @@ describe('RecipeDetailComponent', () => {
         { provide: Router, useValue: fakeRouter },
         { provide: ActivatedRoute, useValue: fakeRoute },
         { provide: DomSanitizer, useValue: fakeSanitizer },
+        { provide: RecentlyViewedService, useValue: fakeRecentlyViewedService },
       ],
     });
   }
 
   beforeEach(() => {
+    localStorage.clear();
+
     fakeRecipeService = {
       getById: vi.fn(),
       deleteWithConfirm: vi.fn(),
@@ -54,6 +60,7 @@ describe('RecipeDetailComponent', () => {
     fakeSanitizer = {
       bypassSecurityTrustHtml: vi.fn((html: string) => html),
     };
+    fakeRecentlyViewedService = { record: vi.fn() };
   });
 
   afterEach(() => {
@@ -99,6 +106,28 @@ describe('RecipeDetailComponent', () => {
 
     expect(component['error']()).toBe('Failed to load recipe.');
     expect(component['loading']()).toBe(false);
+  });
+
+  it('records the recipe as recently viewed on a successful load', () => {
+    fakeRecipeService.getById.mockReturnValue(of(mockRecipe));
+    configure('1');
+
+    const fixture = TestBed.createComponent(RecipeDetailComponent);
+    fixture.detectChanges();
+
+    expect(fakeRecentlyViewedService.record).toHaveBeenCalledWith(mockRecipe.id);
+    expect(fakeRecentlyViewedService.record).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not record a view on a 404/error load', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    fakeRecipeService.getById.mockReturnValue(throwError(() => ({ status: 404 })));
+    configure('1');
+
+    const fixture = TestBed.createComponent(RecipeDetailComponent);
+    fixture.detectChanges();
+
+    expect(fakeRecentlyViewedService.record).not.toHaveBeenCalled();
   });
 
   it('navigates to /recipes when the delete is confirmed', () => {
@@ -298,6 +327,40 @@ describe('RecipeDetailComponent', () => {
 
     const element = fixture.nativeElement as HTMLElement;
     expect(element.querySelector('.markdown-body')?.innerHTML).toContain('4 cups flour');
+  });
+
+  it('reflects FavoritesService state on the favorite button and updates it on click', () => {
+    fakeRecipeService.getById.mockReturnValue(of(mockRecipe));
+    configure('1');
+
+    const fixture = TestBed.createComponent(RecipeDetailComponent);
+    fixture.detectChanges();
+
+    const favoritesService = TestBed.inject(FavoritesService);
+    const element = fixture.nativeElement as HTMLElement;
+    const favoriteButton = element.querySelector(
+      'button[aria-label="Add to favorites"], button[aria-label="Remove from favorites"]',
+    ) as HTMLButtonElement;
+
+    expect(favoriteButton).toBeTruthy();
+    expect(favoritesService.isFavorite(mockRecipe.id)).toBe(false);
+    expect(favoriteButton.getAttribute('aria-pressed')).toBe('false');
+    expect(favoriteButton.getAttribute('aria-label')).toBe('Add to favorites');
+    expect(favoriteButton.querySelector('.material-icons')?.textContent).toBe('favorite_border');
+
+    favoriteButton.click();
+    fixture.detectChanges();
+
+    expect(favoritesService.isFavorite(mockRecipe.id)).toBe(true);
+    expect(favoriteButton.getAttribute('aria-pressed')).toBe('true');
+    expect(favoriteButton.getAttribute('aria-label')).toBe('Remove from favorites');
+    expect(favoriteButton.querySelector('.material-icons')?.textContent).toBe('favorite');
+
+    favoriteButton.click();
+    fixture.detectChanges();
+
+    expect(favoritesService.isFavorite(mockRecipe.id)).toBe(false);
+    expect(favoriteButton.getAttribute('aria-pressed')).toBe('false');
   });
 
   it('resets the scale factor back to 1 when a different recipe loads', () => {
