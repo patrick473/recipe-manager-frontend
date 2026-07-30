@@ -16,6 +16,8 @@ const mockRecipe: Recipe = {
   updatedAt: '2024-01-01T10:00:00',
 };
 
+const scalableContent = '## Ingredients\n\n- 2 cups flour\n- 1 egg\n\n## Instructions\n\n1. Mix.\n';
+
 describe('RecipeDetailComponent', () => {
   let fakeRecipeService: {
     getById: ReturnType<typeof vi.fn>;
@@ -226,5 +228,91 @@ describe('RecipeDetailComponent', () => {
     expect(component['error']()).toBe('Failed to delete recipe.');
     expect(component['deleting']()).toBe(false);
     expect(fakeRouter.navigate).not.toHaveBeenCalled();
+  });
+
+  it('does not render the scale control for a recipe with no scalable ingredients', () => {
+    fakeRecipeService.getById.mockReturnValue(of(mockRecipe));
+    configure('1');
+
+    const fixture = TestBed.createComponent(RecipeDetailComponent);
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('.scale-control')).toBeNull();
+  });
+
+  it('shows a servings stepper, seeded at the recipe servings, when servings is set', () => {
+    const recipe: Recipe = { ...mockRecipe, content: scalableContent, servings: 4 };
+    fakeRecipeService.getById.mockReturnValue(of(recipe));
+    configure('1');
+
+    const fixture = TestBed.createComponent(RecipeDetailComponent);
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('.stepper-value')?.textContent?.trim()).toBe('4');
+    expect(element.querySelector('.multiplier-group')).toBeNull();
+  });
+
+  it('shows multiplier buttons instead of a stepper when the recipe has no servings', () => {
+    const recipe: Recipe = { ...mockRecipe, content: scalableContent, servings: null };
+    fakeRecipeService.getById.mockReturnValue(of(recipe));
+    configure('1');
+
+    const fixture = TestBed.createComponent(RecipeDetailComponent);
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('.multiplier-group')).toBeTruthy();
+    expect(element.querySelector('.stepper')).toBeNull();
+  });
+
+  it('scales rendered ingredient quantities when the servings stepper changes', () => {
+    const recipe: Recipe = { ...mockRecipe, content: scalableContent, servings: 4 };
+    fakeRecipeService.getById.mockReturnValue(of(recipe));
+    configure('1');
+
+    const fixture = TestBed.createComponent(RecipeDetailComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component['onServingsTargetChange'](8);
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('.markdown-body')?.innerHTML).toContain('4 cups flour');
+    expect(element.querySelector('.markdown-body')?.innerHTML).not.toContain('2 cups flour');
+  });
+
+  it('scales rendered ingredient quantities when a multiplier button is selected', () => {
+    const recipe: Recipe = { ...mockRecipe, content: scalableContent, servings: null };
+    fakeRecipeService.getById.mockReturnValue(of(recipe));
+    configure('1');
+
+    const fixture = TestBed.createComponent(RecipeDetailComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component['onMultiplierSelect'](2);
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('.markdown-body')?.innerHTML).toContain('4 cups flour');
+  });
+
+  it('resets the scale factor back to 1 when a different recipe loads', () => {
+    const recipe: Recipe = { ...mockRecipe, content: scalableContent, servings: 4 };
+    fakeRecipeService.getById.mockReturnValue(of(recipe));
+    configure('1');
+
+    const fixture = TestBed.createComponent(RecipeDetailComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component['onServingsTargetChange'](8);
+    expect(component['scaleFactor']()).toBe(2);
+
+    component['ngOnInit']();
+    expect(component['scaleFactor']()).toBe(1);
   });
 });

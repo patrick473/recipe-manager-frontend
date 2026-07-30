@@ -72,6 +72,54 @@
           [cookTimeMinutes]="r.cookTimeMinutes ?? null"
           [servings]="r.servings ?? null"
         />
+        @if (canScale()) {
+          <div class="scale-control">
+            @if (targetServings(); as servings) {
+              <span class="scale-control-label">Servings</span>
+              <div class="stepper">
+                <button
+                  appButton
+                  appearance="secondary"
+                  size="s"
+                  [iconOnly]="true"
+                  type="button"
+                  (click)="onServingsTargetChange(servings - 1)"
+                  [disabled]="servings <= 1"
+                  aria-label="Decrease servings"
+                >
+                  <app-icon name="remove" [size]="16" />
+                </button>
+                <span class="stepper-value">{{ servings }}</span>
+                <button
+                  appButton
+                  appearance="secondary"
+                  size="s"
+                  [iconOnly]="true"
+                  type="button"
+                  (click)="onServingsTargetChange(servings + 1)"
+                  aria-label="Increase servings"
+                >
+                  <app-icon name="add" [size]="16" />
+                </button>
+              </div>
+            } @else {
+              <span class="scale-control-label">Scale</span>
+              <div class="multiplier-group">
+                @for (option of multiplierOptions; track option) {
+                  <button
+                    appButton
+                    [appearance]="scaleFactor() === option ? 'primary' : 'secondary'"
+                    size="s"
+                    type="button"
+                    (click)="onMultiplierSelect(option)"
+                  >
+                    {{ option }}×
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        }
         <div class="markdown-body" [innerHTML]="renderedContent()"></div>
       </div>
     </div>
