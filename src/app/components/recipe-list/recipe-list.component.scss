@@ -28,6 +28,67 @@
   }
 }
 
+.recipe-strip {
+  margin-bottom: var(--space-5);
+}
+
+.recipe-strip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.recipe-strip-title {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.recipe-strip-row {
+  display: flex;
+  gap: var(--space-3);
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+}
+
+.recipe-strip-card {
+  position: relative;
+  flex: 0 0 auto;
+  width: 6rem;
+}
+
+.recipe-strip-card-link {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  color: var(--color-text);
+
+  &:hover .recipe-strip-card-title {
+    color: var(--color-primary);
+  }
+}
+
+.recipe-strip-card-thumb {
+  width: 6rem;
+  height: 4.5rem;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.recipe-strip-card-title {
+  font-size: var(--font-size-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recipe-strip-card-favorite {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  background: var(--color-surface);
+}
+
 .recipe-list-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -179,6 +240,17 @@
 .recipe-card-actions {
   display: flex;
   gap: var(--space-2);
+}
+
+// Favorite toggle: filled-heart state reads as a plain neutral icon against
+// appearance="secondary" otherwise, so give it the same accent used for
+// destructive actions elsewhere on this page.
+.is-favorite {
+  color: var(--color-danger);
+
+  &:hover {
+    color: var(--color-danger);
+  }
 }
 
 .loading-block {

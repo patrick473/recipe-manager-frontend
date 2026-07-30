@@ -35,6 +35,23 @@
             Clone
           </button>
           <button
+            type="button"
+            appButton
+            appearance="secondary"
+            [class.is-favorite]="favoritesService.isFavorite(r.id)"
+            [attr.aria-pressed]="favoritesService.isFavorite(r.id)"
+            [attr.aria-label]="
+              favoritesService.isFavorite(r.id) ? 'Remove from favorites' : 'Add to favorites'
+            "
+            (click)="favoritesService.toggle(r.id)"
+          >
+            <app-icon
+              [name]="favoritesService.isFavorite(r.id) ? 'favorite' : 'favorite_border'"
+              [size]="16"
+            />
+            Favorite
+          </button>
+          <button
             appButton
             appearance="secondary-destructive"
             type="button"

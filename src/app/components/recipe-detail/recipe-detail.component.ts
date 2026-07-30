@@ -13,6 +13,8 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { marked } from 'marked';
 import { Recipe } from '../../models/recipe.model';
+import { FavoritesService } from '../../services/favorites.service';
+import { RecentlyViewedService } from '../../services/recently-viewed.service';
 import { RecipeService } from '../../services/recipe.service';
 import { ButtonDirective } from '../../shared/button.directive';
 import { IconComponent } from '../../shared/icon/icon.component';
@@ -53,8 +55,11 @@ export class RecipeDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly recipeService = inject(RecipeService);
+  private readonly recentlyViewedService = inject(RecentlyViewedService);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly destroyRef = inject(DestroyRef);
+
+  protected readonly favoritesService = inject(FavoritesService);
 
   protected readonly recipe = signal<Recipe | null>(null);
   protected readonly loading = signal(true);
@@ -103,6 +108,7 @@ export class RecipeDetailComponent implements OnInit {
         next: (data) => {
           this.recipe.set(data);
           this.scaleFactor.set(1);
+          this.recentlyViewedService.record(data.id);
           this.loading.set(false);
         },
         error: (err) => {
