@@ -1,0 +1,26 @@
+@media print {
+  @page {
+    margin: 1.5cm;
+  }
+
+  // Force the light palette even when data-theme="dark" is set — printed
+  // paper should never carry the dark theme's near-black background.
+  :root,
+  :root[data-theme='dark'] {
+    color-scheme: light;
+    --color-bg: #f6f9f1;
+    --color-surface: #ffffff;
+    --color-surface-hover: #edf4e6;
+    --color-border: #dbe6d0;
+    --color-text: #1e2a17;
+    --color-text-muted: #66755c;
+    --color-primary: #4a8f3c;
+  }
+
+  app-nav-bar,
+  app-confirm-dialog,
+  .notification,
+  app-loader {
+    display: none !important;
+  }
+}

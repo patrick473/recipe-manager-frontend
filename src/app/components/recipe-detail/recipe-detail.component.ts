@@ -7,6 +7,7 @@ import {
   computed,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -60,6 +61,8 @@ export class RecipeDetailComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly favoritesService = inject(FavoritesService);
+
+  protected readonly propertiesPanel = viewChild(PropertiesPanelComponent);
 
   protected readonly recipe = signal<Recipe | null>(null);
   protected readonly loading = signal(true);
@@ -130,6 +133,14 @@ export class RecipeDetailComponent implements OnInit {
 
   protected onMultiplierSelect(factor: number): void {
     this.scaleFactor.set(factor);
+  }
+
+  protected printRecipe(): void {
+    this.propertiesPanel()?.expand();
+    // Let Angular flush the (OnPush) DOM update for the now-expanded
+    // properties body before the browser snapshots the page to print —
+    // signal writes don't repaint synchronously within this handler.
+    setTimeout(() => window.print());
   }
 
   protected cloneRecipe(): void {

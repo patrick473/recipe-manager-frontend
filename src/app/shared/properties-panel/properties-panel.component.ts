@@ -60,6 +60,11 @@ export class PropertiesPanelComponent {
     this.expanded.update((v) => !v);
   }
 
+  /** Forces the panel open — used by RecipeDetailComponent before printing. */
+  expand(): void {
+    this.expanded.set(true);
+  }
+
   protected removeTag(tag: string): void {
     this.tagsChange.emit(this.tags().filter((t) => t !== tag));
   }

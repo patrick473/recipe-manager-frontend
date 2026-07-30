@@ -363,6 +363,38 @@ describe('RecipeDetailComponent', () => {
     expect(favoriteButton.getAttribute('aria-pressed')).toBe('false');
   });
 
+  it('clicking Print expands the properties panel and calls window.print after the DOM flush', async () => {
+    vi.useFakeTimers();
+    try {
+      fakeRecipeService.getById.mockReturnValue(of(mockRecipe));
+      configure('1');
+
+      const fixture = TestBed.createComponent(RecipeDetailComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      const propertiesPanel = component['propertiesPanel']();
+      const expandSpy = vi.spyOn(propertiesPanel!, 'expand');
+      const printSpy = vi.spyOn(window, 'print').mockImplementation(() => undefined);
+
+      const element = fixture.nativeElement as HTMLElement;
+      const printButton = Array.from(element.querySelectorAll('.detail-actions button')).find(
+        (button) => button.textContent?.includes('Print'),
+      ) as HTMLButtonElement;
+
+      printButton.click();
+
+      expect(expandSpy).toHaveBeenCalled();
+      expect(printSpy).not.toHaveBeenCalled();
+
+      await vi.runAllTimersAsync();
+
+      expect(printSpy).toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('resets the scale factor back to 1 when a different recipe loads', () => {
     const recipe: Recipe = { ...mockRecipe, content: scalableContent, servings: 4 };
     fakeRecipeService.getById.mockReturnValue(of(recipe));
