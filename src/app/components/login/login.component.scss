@@ -1,0 +1,22 @@
+:host {
+  display: block;
+  max-width: 100%;
+  padding: var(--space-5);
+}
+
+.auth-page {
+  display: flex;
+  justify-content: center;
+  padding-top: var(--space-8);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 24rem;
+}
+
+.auth-switch {
+  margin-top: var(--space-4);
+  text-align: center;
+  color: var(--color-text-muted);
+}

@@ -461,11 +461,3 @@ formData.append(`file`, uploadRecipeImageBody.file);
   }
 };
 
-export type ListRecipesClientResult = NonNullable<RecipePageResponse>
-export type CreateRecipeClientResult = NonNullable<RecipeResponse>
-export type GetRecipeClientResult = NonNullable<RecipeResponse>
-export type UpdateRecipeClientResult = NonNullable<RecipeResponse>
-export type DeleteRecipeClientResult = NonNullable<void>
-export type UploadRecipeImageClientResult = NonNullable<RecipeResponse>
-export type DeleteRecipeImageClientResult = NonNullable<RecipeResponse>
-export type GetRecipeImageClientResult = NonNullable<Blob>

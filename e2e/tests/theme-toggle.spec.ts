@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../fixtures/api';
 
 test('toggling the theme flips data-theme and persists across reload', async ({ page }) => {
   await page.goto('/recipes');

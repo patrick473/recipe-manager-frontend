@@ -50,11 +50,57 @@ export async function deleteRecipeIfExists(api: APIRequestContext, id: number): 
   }
 }
 
-export const test = base.extend<{ api: APIRequestContext }>({
-  api: async ({}, use) => {
-    const api = await request.newContext({ baseURL: API_BASE_URL });
+interface AuthedUser {
+  token: string;
+  userId: number;
+  username: string;
+}
+
+/** Unique per-test credentials — mirrors uniqueTitle()'s collision-avoidance for a parallel test run. */
+function uniqueCredentials(): { username: string; password: string } {
+  return {
+    username: `e2e_${Date.now()}_${Math.floor(Math.random() * 1_000_000)}`,
+    password: 'e2e-test-password-1',
+  };
+}
+
+export const test = base.extend<{ api: APIRequestContext; authedUser: AuthedUser }>({
+  // Every route under /recipes now requires a bearer token (AUTHENTICATION_SPEC.md
+  // Part 3), and the frontend's /recipes routes are guarded client-side too
+  // (Part 6). Registering a fresh account per test gives both the `api`
+  // fixture (raw HTTP calls) and the `page` fixture (browser navigation,
+  // overridden below) a valid session with no cross-test collisions.
+  authedUser: async ({}, use) => {
+    const req = await request.newContext({ baseURL: API_BASE_URL });
+    const { username, password } = uniqueCredentials();
+    const response = await req.post('/auth/register', { data: { username, password } });
+    if (!response.ok()) {
+      throw new Error(
+        `Failed to register e2e test user: ${response.status()} ${await response.text()}`,
+      );
+    }
+    const body: AuthedUser = await response.json();
+    await req.dispose();
+    await use(body);
+  },
+
+  api: async ({ authedUser }, use) => {
+    const api = await request.newContext({
+      baseURL: API_BASE_URL,
+      extraHTTPHeaders: { Authorization: `Bearer ${authedUser.token}` },
+    });
     await use(api);
     await api.dispose();
+  },
+
+  // Seeds localStorage with the registered session before any app script
+  // runs, so AuthService rehydrates as already-authenticated on first paint
+  // and authGuard never bounces the test to /login.
+  page: async ({ page, authedUser }, use) => {
+    await page.addInitScript((auth) => {
+      window.localStorage.setItem('auth', JSON.stringify(auth));
+    }, authedUser);
+    await use(page);
   },
 });
 

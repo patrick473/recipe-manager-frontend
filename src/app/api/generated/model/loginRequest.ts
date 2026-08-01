@@ -10,13 +10,12 @@
  * OpenAPI spec version: 0.0.1
  */
 
-export * from './authResponse';
-export * from './listRecipesParams';
-export * from './loginRequest';
-export * from './problemDetail';
-export * from './problemDetailErrors';
-export * from './recipePageResponse';
-export * from './recipeRequest';
-export * from './recipeResponse';
-export * from './registerRequest';
-export * from './uploadRecipeImageBody';
+/**
+ * Payload for logging into an existing account
+ */
+export interface LoginRequest {
+  /** Account username */
+  username: string;
+  /** Account password */
+  password: string;
+}

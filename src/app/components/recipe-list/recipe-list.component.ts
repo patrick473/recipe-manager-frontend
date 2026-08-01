@@ -20,6 +20,7 @@ import {
   switchMap,
 } from 'rxjs/operators';
 import { Recipe } from '../../models/recipe.model';
+import { AuthService } from '../../services/auth.service';
 import { FavoritesService } from '../../services/favorites.service';
 import { RecentlyViewedService } from '../../services/recently-viewed.service';
 import { RecipeService } from '../../services/recipe.service';
@@ -119,6 +120,7 @@ export class RecipeListComponent implements OnInit {
 
   protected readonly favoritesService = inject(FavoritesService);
   protected readonly recentlyViewedService = inject(RecentlyViewedService);
+  protected readonly auth = inject(AuthService);
 
   protected readonly recipes = signal<Recipe[]>([]);
   protected readonly loading = signal(true);

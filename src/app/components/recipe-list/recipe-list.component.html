@@ -172,11 +172,15 @@
 @if (!loading() && recipes().length === 0 && !error() && !isFilterActive()) {
   <div class="empty-state">
     <h2>No recipes yet</h2>
-    <p>Create your first recipe to get started.</p>
-    <a routerLink="/recipes/new" appButton appearance="primary">
-      <app-icon name="plus" [size]="16" />
-      New Recipe
-    </a>
+    @if (auth.isAuthenticated()) {
+      <p>Create your first recipe to get started.</p>
+      <a routerLink="/recipes/new" appButton appearance="primary">
+        <app-icon name="plus" [size]="16" />
+        New Recipe
+      </a>
+    } @else {
+      <p>Log in to create the first recipe.</p>
+    }
   </div>
 }
 
@@ -217,15 +221,17 @@
             }
           </div>
           <div class="recipe-card-actions">
-            <a
-              [routerLink]="['/recipes', recipe.id, 'edit']"
-              appButton
-              appearance="secondary"
-              size="s"
-            >
-              <app-icon name="edit" [size]="14" />
-              Edit
-            </a>
+            @if (auth.isAuthenticated()) {
+              <a
+                [routerLink]="['/recipes', recipe.id, 'edit']"
+                appButton
+                appearance="secondary"
+                size="s"
+              >
+                <app-icon name="edit" [size]="14" />
+                Edit
+              </a>
+            }
             <button
               type="button"
               appButton
@@ -246,17 +252,19 @@
                 [size]="14"
               />
             </button>
-            <button
-              appButton
-              appearance="secondary-destructive"
-              size="s"
-              type="button"
-              (click)="deleteRecipe(recipe)"
-              [disabled]="deleting() === recipe.id"
-            >
-              <app-icon name="delete" [size]="14" />
-              {{ deleting() === recipe.id ? 'Deleting…' : 'Delete' }}
-            </button>
+            @if (auth.isAuthenticated()) {
+              <button
+                appButton
+                appearance="secondary-destructive"
+                size="s"
+                type="button"
+                (click)="deleteRecipe(recipe)"
+                [disabled]="deleting() === recipe.id"
+              >
+                <app-icon name="delete" [size]="14" />
+                {{ deleting() === recipe.id ? 'Deleting…' : 'Delete' }}
+              </button>
+            }
           </div>
         </div>
       }
@@ -288,15 +296,17 @@
               <p class="recipe-list-row-date">Total: {{ total }} min</p>
             }
             <div class="recipe-list-row-actions">
-              <a
-                [routerLink]="['/recipes', recipe.id, 'edit']"
-                appButton
-                appearance="secondary"
-                size="s"
-              >
-                <app-icon name="edit" [size]="14" />
-                Edit
-              </a>
+              @if (auth.isAuthenticated()) {
+                <a
+                  [routerLink]="['/recipes', recipe.id, 'edit']"
+                  appButton
+                  appearance="secondary"
+                  size="s"
+                >
+                  <app-icon name="edit" [size]="14" />
+                  Edit
+                </a>
+              }
               <button
                 type="button"
                 appButton
@@ -317,17 +327,19 @@
                   [size]="14"
                 />
               </button>
-              <button
-                appButton
-                appearance="secondary-destructive"
-                size="s"
-                type="button"
-                (click)="deleteRecipe(recipe)"
-                [disabled]="deleting() === recipe.id"
-              >
-                <app-icon name="delete" [size]="14" />
-                {{ deleting() === recipe.id ? 'Deleting…' : 'Delete' }}
-              </button>
+              @if (auth.isAuthenticated()) {
+                <button
+                  appButton
+                  appearance="secondary-destructive"
+                  size="s"
+                  type="button"
+                  (click)="deleteRecipe(recipe)"
+                  [disabled]="deleting() === recipe.id"
+                >
+                  <app-icon name="delete" [size]="14" />
+                  {{ deleting() === recipe.id ? 'Deleting…' : 'Delete' }}
+                </button>
+              }
             </div>
           </div>
         </div>

@@ -24,22 +24,82 @@
         <span class="side-nav-text">Recipes</span>
       }
     </a>
-    <a
-      routerLink="/recipes/new"
-      appButton
-      appearance="primary"
-      size="s"
-      class="side-nav-link"
-      [attr.title]="expanded() ? null : 'New Recipe'"
-    >
-      <span class="side-nav-icon">
-        <app-icon name="add" [size]="18" />
-      </span>
-      @if (expanded()) {
-        <span class="side-nav-text">New Recipe</span>
-      }
-    </a>
+    @if (auth.isAuthenticated()) {
+      <a
+        routerLink="/recipes/new"
+        appButton
+        appearance="primary"
+        size="s"
+        class="side-nav-link"
+        [attr.title]="expanded() ? null : 'New Recipe'"
+      >
+        <span class="side-nav-icon">
+          <app-icon name="add" [size]="18" />
+        </span>
+        @if (expanded()) {
+          <span class="side-nav-text">New Recipe</span>
+        }
+      </a>
+    }
   </div>
+
+  <div class="side-nav-account">
+    @if (auth.isAuthenticated()) {
+      @if (expanded()) {
+        <span class="side-nav-username" [attr.title]="auth.currentUser()?.username">{{
+          auth.currentUser()?.username
+        }}</span>
+      }
+      <button
+        appButton
+        appearance="flat"
+        size="s"
+        type="button"
+        class="side-nav-link"
+        [attr.title]="expanded() ? null : 'Log out'"
+        (click)="logout()"
+      >
+        <span class="side-nav-icon">
+          <app-icon name="logout" [size]="18" />
+        </span>
+        @if (expanded()) {
+          <span class="side-nav-text">Log out</span>
+        }
+      </button>
+    } @else {
+      <a
+        routerLink="/login"
+        appButton
+        appearance="flat"
+        size="s"
+        class="side-nav-link"
+        [attr.title]="expanded() ? null : 'Log in'"
+      >
+        <span class="side-nav-icon">
+          <app-icon name="login" [size]="18" />
+        </span>
+        @if (expanded()) {
+          <span class="side-nav-text">Log in</span>
+        }
+      </a>
+      <a
+        routerLink="/register"
+        appButton
+        appearance="flat"
+        size="s"
+        class="side-nav-link"
+        [attr.title]="expanded() ? null : 'Register'"
+      >
+        <span class="side-nav-icon">
+          <app-icon name="person_add" [size]="18" />
+        </span>
+        @if (expanded()) {
+          <span class="side-nav-text">Register</span>
+        }
+      </a>
+    }
+  </div>
+
   <button
     appButton
     appearance="flat"

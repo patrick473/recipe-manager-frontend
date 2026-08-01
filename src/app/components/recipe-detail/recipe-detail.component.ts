@@ -14,6 +14,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { marked } from 'marked';
 import { Recipe } from '../../models/recipe.model';
+import { AuthService } from '../../services/auth.service';
 import { FavoritesService } from '../../services/favorites.service';
 import { RecentlyViewedService } from '../../services/recently-viewed.service';
 import { RecipeService } from '../../services/recipe.service';
@@ -61,6 +62,7 @@ export class RecipeDetailComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly favoritesService = inject(FavoritesService);
+  protected readonly auth = inject(AuthService);
 
   protected readonly propertiesPanel = viewChild(PropertiesPanelComponent);
 

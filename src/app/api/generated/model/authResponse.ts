@@ -10,13 +10,14 @@
  * OpenAPI spec version: 0.0.1
  */
 
-export * from './authResponse';
-export * from './listRecipesParams';
-export * from './loginRequest';
-export * from './problemDetail';
-export * from './problemDetailErrors';
-export * from './recipePageResponse';
-export * from './recipeRequest';
-export * from './recipeResponse';
-export * from './registerRequest';
-export * from './uploadRecipeImageBody';
+/**
+ * Issued on successful register/login
+ */
+export interface AuthResponse {
+  /** Signed JWT to send as `Authorization Bearer <token>` on subsequent requests */
+  readonly token: string;
+  /** Authenticated account id */
+  readonly userId: number;
+  /** Authenticated account username */
+  readonly username: string;
+}
