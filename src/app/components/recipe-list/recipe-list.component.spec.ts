@@ -246,6 +246,14 @@ describe('RecipeListComponent', () => {
   describe('view modes', () => {
     function createFixtureInMode(mode: 'grid' | 'list') {
       localStorage.setItem('recipeListViewMode', mode);
+      // Edit/Delete are only rendered for an authenticated caller (see
+      // AUTHENTICATION_SPEC.md's public-read revision) — seed a session the
+      // same way the real AuthService persists one, so this DOM-wiring suite
+      // exercises those controls rather than their auth-gated absence.
+      localStorage.setItem(
+        'auth',
+        JSON.stringify({ token: 'fake-token', userId: 1, username: 'testuser' }),
+      );
       fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
       const fixture = TestBed.createComponent(RecipeListComponent);
       fixture.detectChanges();
@@ -406,6 +414,24 @@ describe('RecipeListComponent', () => {
 
         expect(favoritesService.isFavorite(firstRecipe.id)).toBe(false);
         expect(favoriteButton.getAttribute('aria-pressed')).toBe('false');
+      });
+
+      it('hides Edit and Delete for an unauthenticated caller but keeps the favorite button', () => {
+        localStorage.setItem('recipeListViewMode', mode);
+        fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
+        const fixture = TestBed.createComponent(RecipeListComponent);
+        fixture.detectChanges();
+
+        const element = fixture.nativeElement as HTMLElement;
+        expect(
+          Array.from(element.querySelectorAll('a')).some((a) => a.textContent?.includes('Edit')),
+        ).toBe(false);
+        expect(
+          Array.from(element.querySelectorAll('button')).some((btn) =>
+            btn.textContent?.includes('Delete'),
+          ),
+        ).toBe(false);
+        expect(() => findFavoriteButton(element)).not.toThrow();
       });
     });
   });

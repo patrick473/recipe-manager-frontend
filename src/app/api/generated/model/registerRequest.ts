@@ -10,13 +10,15 @@
  * OpenAPI spec version: 0.0.1
  */
 
-export * from './authResponse';
-export * from './listRecipesParams';
-export * from './loginRequest';
-export * from './problemDetail';
-export * from './problemDetailErrors';
-export * from './recipePageResponse';
-export * from './recipeRequest';
-export * from './recipeResponse';
-export * from './registerRequest';
-export * from './uploadRecipeImageBody';
+/**
+ * Payload for creating a new account
+ */
+export interface RegisterRequest {
+  /** Unique account username */
+  username: string;
+  /**
+     * Account password, minimum 8 characters
+     * @minLength 8
+     */
+  password: string;
+}

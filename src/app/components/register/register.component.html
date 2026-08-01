@@ -1,0 +1,48 @@
+<div class="auth-page">
+  <div class="card-lg auth-card">
+    <h2 class="form-title">Register</h2>
+
+    @if (submitError()) {
+      <div class="notification notification-negative mb">{{ submitError() }}</div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <div class="field">
+        <label class="field-label" for="username">Username</label>
+        <input
+          id="username"
+          class="field-input"
+          formControlName="username"
+          placeholder="Choose a username"
+          autocomplete="username"
+        />
+        @if (isInvalid('username')) {
+          <p class="field-error">Username is required.</p>
+        }
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          class="field-input"
+          formControlName="password"
+          placeholder="At least 8 characters"
+          autocomplete="new-password"
+        />
+        @if (isInvalid('password')) {
+          <p class="field-error">{{ passwordError }}</p>
+        }
+      </div>
+
+      <div class="form-actions">
+        <button appButton appearance="primary" type="submit" [disabled]="submitting()">
+          {{ submitting() ? 'Registering…' : 'Register' }}
+        </button>
+      </div>
+    </form>
+
+    <p class="auth-switch">Already have an account? <a routerLink="/login">Log in</a></p>
+  </div>
+</div>

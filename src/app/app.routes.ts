@@ -1,10 +1,20 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
     path: '',
     redirectTo: 'recipes',
     pathMatch: 'full',
+  },
+  {
+    path: 'login',
+    loadComponent: () => import('./components/login/login.component').then((m) => m.LoginComponent),
+  },
+  {
+    path: 'register',
+    loadComponent: () =>
+      import('./components/register/register.component').then((m) => m.RegisterComponent),
   },
   {
     path: 'recipes',
@@ -15,6 +25,7 @@ export const routes: Routes = [
     path: 'recipes/new',
     loadComponent: () =>
       import('./components/recipe-form/recipe-form.component').then((m) => m.RecipeFormComponent),
+    canActivate: [authGuard],
   },
   {
     path: 'recipes/:id',
@@ -27,6 +38,7 @@ export const routes: Routes = [
     path: 'recipes/:id/edit',
     loadComponent: () =>
       import('./components/recipe-form/recipe-form.component').then((m) => m.RecipeFormComponent),
+    canActivate: [authGuard],
   },
   {
     path: '**',

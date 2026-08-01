@@ -26,14 +26,16 @@
           <span>{{ r.title }}</span>
         </nav>
         <div class="detail-actions">
-          <a [routerLink]="['/recipes', r.id, 'edit']" appButton appearance="secondary">
-            <app-icon name="pencil" [size]="16" />
-            Edit
-          </a>
-          <button appButton appearance="secondary" type="button" (click)="cloneRecipe()">
-            <app-icon name="content_copy" [size]="16" />
-            Clone
-          </button>
+          @if (auth.isAuthenticated()) {
+            <a [routerLink]="['/recipes', r.id, 'edit']" appButton appearance="secondary">
+              <app-icon name="pencil" [size]="16" />
+              Edit
+            </a>
+            <button appButton appearance="secondary" type="button" (click)="cloneRecipe()">
+              <app-icon name="content_copy" [size]="16" />
+              Clone
+            </button>
+          }
           <button
             type="button"
             appButton
@@ -55,16 +57,18 @@
             <app-icon name="print" [size]="16" />
             Print
           </button>
-          <button
-            appButton
-            appearance="secondary-destructive"
-            type="button"
-            (click)="deleteRecipe()"
-            [disabled]="deleting()"
-          >
-            <app-icon name="trash" [size]="16" />
-            {{ deleting() ? 'Deleting…' : 'Delete' }}
-          </button>
+          @if (auth.isAuthenticated()) {
+            <button
+              appButton
+              appearance="secondary-destructive"
+              type="button"
+              (click)="deleteRecipe()"
+              [disabled]="deleting()"
+            >
+              <app-icon name="trash" [size]="16" />
+              {{ deleting() ? 'Deleting…' : 'Delete' }}
+            </button>
+          }
         </div>
       </div>
 
