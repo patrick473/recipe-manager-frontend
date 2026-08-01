@@ -3,7 +3,7 @@
 Design spec for [FUTURE_IDEAS.md](FUTURE_IDEAS.md) item 11: "currently fully
 open; add Spring Security + JWT, scope recipes to a `userId`, add
 login/register on the frontend. Biggest architectural change on the list."
-This spec reads "per-user recipes" as *ownership*, not *visibility*: every
+This spec reads "per-user recipes" as _ownership_, not _visibility_: every
 recipe belongs to exactly one account, but the shared library is browsable
 by anyone — `GET /recipes`, `GET /recipes/{id}`, and the hero-image endpoint
 never filter by caller and require no `Authorization` header at all. Only
@@ -29,13 +29,13 @@ backlog wording, needs no CSRF handling, and requires no change to how the
 existing `apiBaseUrlInterceptor` composes with a second interceptor. A
 second tradeoff: a recipe you don't own returns `404` on a mutation attempt,
 not `403` — same as any other nonexistent id today — so the API never
-confirms that a given id belongs to *someone else's* account.
+confirms that a given id belongs to _someone else's_ account.
 
 **Explicitly out of scope for this pass:** OAuth/social login, email
 verification, forgot-password/reset flows, refresh-token rotation (the
 issued JWT is a single access token with a fixed expiry; once it expires the
 user re-logs-in — see "Deferred"), roles/permissions beyond "authenticated
-user" (no admin, no RBAC), collaborative *editing* of a recipe across
+user" (no admin, no RBAC), collaborative _editing_ of a recipe across
 accounts (reading is shared, but only the owner can ever mutate), rate-limiting
 `/auth/**`, and migrating pre-existing recipe rows
 in a populated database. That last one matters here specifically: this repo
@@ -59,7 +59,7 @@ rows is out of scope for this spec to handle — see "Deferred."
 - [application.properties](../../recipe-manager-backend/src/main/resources/application.properties) — only file of its kind (no `-test`/`-dev` profile split). H2 in-memory (`DB_CLOSE_ON_EXIT=FALSE`), `ddl-auto=update`. No security-related property exists.
 - No `SecurityConfig`, `SecurityFilterChain`, `User`/`Account` entity, or `UserRepository` exists anywhere in the codebase today — confirmed by a repo-wide search. The closest thing to CORS config is a `WebMvcConfigurer` bean in [AppConfig.java](../../recipe-manager-backend/src/main/java/com/example/recipemanager/AppConfig.java) (lines 42-54), allowing `:4200`/`:3000`. This is **not** a `CorsConfigurationSource` — Spring Security needs one explicitly wired via `http.cors(...)`, so this bean is replaced, not kept alongside the new config (see Part 3).
 - [openapi.yaml](../../recipe-manager-backend/openapi.yaml) has no `security:` key and no `securitySchemes` — no auth documented today. `components.schemas` holds `RecipeRequest`/`RecipeResponse`/`RecipePageResponse`/`ProblemDetail`, hand-maintained as the Orval source of truth.
-- Backend tests: `RecipeManagerApplicationTests` (`@SpringBootTest`, context load), `RecipeControllerTest` (`@WebMvcTest(RecipeController.class)`, `@MockitoBean RecipeService`), `RecipeRepositoryTest` (`@DataJpaTest`), `RecipeControllerImageTest` (`@SpringBootTest(webEnvironment = RANDOM_PORT)`). None reference any auth concept today — the moment `spring-boot-starter-security` lands on the classpath, `@WebMvcTest` auto-secures its slice and every existing `RecipeControllerTest` request starts failing with 401 *before* `SecurityConfig` is even written. This has to be accounted for in the same PR that adds the dependency (Part 3's "Files touched").
+- Backend tests: `RecipeManagerApplicationTests` (`@SpringBootTest`, context load), `RecipeControllerTest` (`@WebMvcTest(RecipeController.class)`, `@MockitoBean RecipeService`), `RecipeRepositoryTest` (`@DataJpaTest`), `RecipeControllerImageTest` (`@SpringBootTest(webEnvironment = RANDOM_PORT)`). None reference any auth concept today — the moment `spring-boot-starter-security` lands on the classpath, `@WebMvcTest` auto-secures its slice and every existing `RecipeControllerTest` request starts failing with 401 _before_ `SecurityConfig` is even written. This has to be accounted for in the same PR that adds the dependency (Part 3's "Files touched").
 - Frontend routing ([app.routes.ts](../src/app/app.routes.ts)) is flat, no `canActivate`/`canMatch` on any route.
 - [recipe.service.ts](../src/app/services/recipe.service.ts) wraps the generated `RecipesService` client; no auth/identity concept.
 - Exactly one `HttpInterceptorFn` exists today, [api-base-url.interceptor.ts](../src/app/interceptors/api-base-url.interceptor.ts), prepending `environment.apiUrl` to relative request URLs, registered in [app.config.ts](../src/app/app.config.ts) via `provideHttpClient(withInterceptors([apiBaseUrlInterceptor]))`. No route guard, no token storage, no `jwt-decode`/`@auth0/angular-jwt` dependency exists anywhere in the repo.
@@ -82,7 +82,7 @@ rows is out of scope for this spec to handle — see "Deferred."
 
 - New `model/User.java`: `@Entity @Table(name = "users")`, `id: Long` (`IDENTITY`, matching `Recipe`'s strategy), `username: String` (`@Column(nullable = false, unique = true)`), `password: String` (BCrypt hash, `@Column(nullable = false)`), `createdAt: Instant` (`@CreationTimestamp`). Lombok `@Data @Builder @NoArgsConstructor @AllArgsConstructor`, matching `Recipe`'s style.
 - New `repository/UserRepository.java`: `JpaRepository<User, Long>` plus `Optional<User> findByUsername(String username)` and `boolean existsByUsername(String username)`.
-- New `dto/RegisterRequest.java` / `dto/LoginRequest.java`: `username` (`@NotBlank`), `password` (`@NotBlank`, `@Size(min = 8)` on `RegisterRequest` only — login just needs "present," the strength check only matters when a password is being *set*).
+- New `dto/RegisterRequest.java` / `dto/LoginRequest.java`: `username` (`@NotBlank`), `password` (`@NotBlank`, `@Size(min = 8)` on `RegisterRequest` only — login just needs "present," the strength check only matters when a password is being _set_).
 - New `dto/AuthResponse.java`: `token: String`, `userId: Long`, `username: String`.
 - New `exception/UsernameAlreadyExistsException.java` — mapped in `GlobalExceptionHandler` to 409, following the exact pattern of the existing 5 handlers (`ProblemDetail.forStatusAndDetail(CONFLICT, ...)`, type `.../errors/username-taken`).
 - New `controller/AuthController.java`: `@RestController @RequestMapping("/auth")`, `@RequiredArgsConstructor`, depends on `UserRepository`, `PasswordEncoder`, and the `JwtService`/`AuthenticationManager` from Part 2. `register()` checks `existsByUsername`, saves with `passwordEncoder.encode(...)`, then generates a token exactly as `login()` does. `login()` builds a `UsernamePasswordAuthenticationToken` and calls `authenticationManager.authenticate(...)` (Spring Security throws `BadCredentialsException` on failure — handled in Part 3, not here).
@@ -107,7 +107,7 @@ rows is out of scope for this spec to handle — see "Deferred."
 
 ### Implementation
 
-- New dependency: `io.jsonwebtoken:jjwt-api`/`jjwt-impl`/`jjwt-jackson` (0.12.x) — a self-issued, self-validated HMAC-signed JWT has no external issuer/JWK set, so the heavier `spring-boot-starter-oauth2-resource-server` (built for validating *externally issued* tokens against a JWK endpoint) is more machinery than this needs. `jjwt` plus a small custom filter is the standard shape for "one service issues and validates its own JWTs."
+- New dependency: `io.jsonwebtoken:jjwt-api`/`jjwt-impl`/`jjwt-jackson` (0.12.x) — a self-issued, self-validated HMAC-signed JWT has no external issuer/JWK set, so the heavier `spring-boot-starter-oauth2-resource-server` (built for validating _externally issued_ tokens against a JWK endpoint) is more machinery than this needs. `jjwt` plus a small custom filter is the standard shape for "one service issues and validates its own JWTs."
 - New `security/JwtService.java`: `generateToken(User user): String` (subject = `username`, custom claim `userId`, `iat`/`exp` from `app.jwt.expiration-ms`, signed with an HMAC-SHA256 key built from `app.jwt.secret`), `extractUsername(String token): String`, `extractUserId(String token): Long`, `isTokenValid(String token): boolean` (signature + expiry check, swallowing `JwtException` into `false` rather than letting it propagate as a 500).
 - New `application.properties` entries: `app.jwt.secret` (base64, ≥256-bit — a checked-in dev default is fine for this repo the same way the H2 URL is checked in, but flag in a comment that any real deployment must override it via an env var, since a leaked signing secret lets anyone mint valid tokens) and `app.jwt.expiration-ms=86400000` (24h).
 - New `security/UserPrincipal.java` implementing `UserDetails`: wraps a `User`, `getAuthorities()` returns a single fixed `ROLE_USER` authority for everyone (no roles table — out of scope), `getUsername()`/`getPassword()` delegate to the wrapped `User`. Exposes `getId(): Long` (not part of `UserDetails`, used by the controller layer to thread ownership through — see Part 3).
@@ -268,6 +268,6 @@ rows is out of scope for this spec to handle — see "Deferred."
 
 - Refresh tokens / silent re-authentication — today a user is simply logged out (redirected to `/login`) the moment their fixed-expiry token lapses. A refresh-token flow (short-lived access token + long-lived refresh token, rotated on use) is a well-scoped follow-up once the basic flow is proven out.
 - Data migration for an already-populated, non-H2 deployment: assigning ownership to pre-existing recipe rows (e.g. a "migrate everything to a designated admin account" script) if this app is ever actually deployed against Postgres with real data before this spec lands. Not needed for this repo's current all-H2, no-migration-tool reality.
-- Collaborative *editing* — reads are already shared across every account (see Part 3), but letting more than one account edit the same recipe would need a join table (multiple owners/editors per recipe) and is a meaningfully different feature.
+- Collaborative _editing_ — reads are already shared across every account (see Part 3), but letting more than one account edit the same recipe would need a join table (multiple owners/editors per recipe) and is a meaningfully different feature.
 - Roles/admin capabilities beyond "authenticated user."
 - Account settings (change password, change username, delete account).

@@ -75,7 +75,7 @@ regex, both predating this spec).
   recipes existed in the database but were invisible to every real
   account — starting the app and logging in as yourself always showed an
   empty list, regardless of what `DataSeeder` had inserted. More generally,
-  the same strict scoping meant *any* two accounts on the same instance
+  the same strict scoping meant _any_ two accounts on the same instance
   could never see each other's recipes at all, not just the seed data.
   Revised the design after this was caught: reads (`findAll`/`findById`/
   `loadImage` in `RecipeService`, and the corresponding `RecipeController`
@@ -85,7 +85,7 @@ regex, both predating this spec).
   `findAll` no longer needed it. See `AUTHENTICATION_SPEC.md` Part 3, which
   was updated in place to describe this final behavior rather than the
   original all-private design.
-- Unrelated latent bug surfaced by *new* test coverage, not by the auth
+- Unrelated latent bug surfaced by _new_ test coverage, not by the auth
   work itself: `RecipeService.create()`/`update()` set the `tags`
   `@ElementCollection` to the immutable `List.of()`. No prior test
   exercised `PUT /recipes/{id}` against a real database — only mocked-service
@@ -155,8 +155,8 @@ and still unrelated to auth.
   broke the moment the buttons became conditional on `auth.isAuthenticated()`,
   because that suite's `beforeEach` calls `localStorage.clear()` and
   `AuthService` (never mocked in this spec file, unlike `nav-bar.component
-  .spec.ts`) reads real `localStorage` on construction — with no seeded
-  session, every test in the file was actually exercising the *logged-out*
+.spec.ts`) reads real `localStorage` on construction — with no seeded
+  session, every test in the file was actually exercising the _logged-out_
   render path. Fixed by seeding a fake `auth` localStorage entry (same shape
   `AuthService` itself persists) in that block's `createFixtureInMode`
   helper, plus one new test asserting the logged-out path explicitly hides
