@@ -9,19 +9,9 @@
  *
  * OpenAPI spec version: 0.0.1
  */
+import type { ProblemDetail } from './problemDetail';
 
 /**
- * Payload for creating a new account
+ * Missing, invalid, or expired bearer token
  */
-export interface RegisterRequest {
-  /**
-     * Unique account username
-     * @minLength 1
-     */
-  username: string;
-  /**
-     * Account password, minimum 8 characters
-     * @minLength 8
-     */
-  password: string;
-}
+export type UnauthorizedResponse = ProblemDetail;
