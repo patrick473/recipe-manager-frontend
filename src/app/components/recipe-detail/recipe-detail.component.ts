@@ -12,6 +12,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import { Recipe } from '../../models/recipe.model';
 import { AuthService } from '../../services/auth.service';
@@ -101,7 +102,8 @@ export class RecipeDetailComponent implements OnInit {
 
     const scaledContent = scaleIngredientsMarkdown(recipe.content, this.scaleFactor());
     const html = marked.parse(scaledContent) as string;
-    return this.sanitizer.bypassSecurityTrustHtml(html);
+    const clean = DOMPurify.sanitize(html);
+    return this.sanitizer.bypassSecurityTrustHtml(clean);
   });
 
   ngOnInit(): void {
@@ -162,6 +164,8 @@ export class RecipeDetailComponent implements OnInit {
       .subscribe({
         next: (deleted) => {
           if (deleted) {
+            this.favoritesService.remove(recipe.id);
+            this.recentlyViewedService.remove(recipe.id);
             this.router.navigate(['/recipes']);
           } else {
             this.deleting.set(false);

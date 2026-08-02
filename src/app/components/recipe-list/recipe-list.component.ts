@@ -315,6 +315,8 @@ export class RecipeListComponent implements OnInit {
           this.deleting.set(null);
           if (deleted) {
             this.recipes.update((recipes) => recipes.filter((r) => r.id !== recipe.id));
+            this.favoritesService.remove(recipe.id);
+            this.recentlyViewedService.remove(recipe.id);
           }
         },
         error: (err) => {

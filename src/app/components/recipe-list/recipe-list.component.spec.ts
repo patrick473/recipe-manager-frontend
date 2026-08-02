@@ -181,6 +181,55 @@ describe('RecipeListComponent', () => {
     expect(component['recipes']()).toEqual([mockRecipes[1]]);
   });
 
+  it('removes the recipe from favorites and recently-viewed stores when the delete is confirmed', () => {
+    fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
+    const delete$ = new Subject<boolean>();
+    fakeRecipeService.deleteWithConfirm.mockImplementation(
+      (recipe: Recipe, onConfirmed?: () => void) => {
+        onConfirmed?.();
+        return delete$.asObservable();
+      },
+    );
+
+    const fixture = TestBed.createComponent(RecipeListComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    const favoritesService = TestBed.inject(FavoritesService);
+    const recentlyViewedService = TestBed.inject(RecentlyViewedService);
+    const favoritesRemoveSpy = vi.spyOn(favoritesService, 'remove');
+    const recentlyViewedRemoveSpy = vi.spyOn(recentlyViewedService, 'remove');
+
+    component['deleteRecipe'](mockRecipes[0]);
+    delete$.next(true);
+    delete$.complete();
+
+    expect(favoritesRemoveSpy).toHaveBeenCalledWith(mockRecipes[0].id);
+    expect(recentlyViewedRemoveSpy).toHaveBeenCalledWith(mockRecipes[0].id);
+  });
+
+  it('does not touch favorites/recently-viewed stores when the delete is cancelled', () => {
+    fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
+    const delete$ = new Subject<boolean>();
+    fakeRecipeService.deleteWithConfirm.mockReturnValue(delete$.asObservable());
+
+    const fixture = TestBed.createComponent(RecipeListComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    const favoritesService = TestBed.inject(FavoritesService);
+    const recentlyViewedService = TestBed.inject(RecentlyViewedService);
+    const favoritesRemoveSpy = vi.spyOn(favoritesService, 'remove');
+    const recentlyViewedRemoveSpy = vi.spyOn(recentlyViewedService, 'remove');
+
+    component['deleteRecipe'](mockRecipes[0]);
+    delete$.next(false);
+    delete$.complete();
+
+    expect(favoritesRemoveSpy).not.toHaveBeenCalled();
+    expect(recentlyViewedRemoveSpy).not.toHaveBeenCalled();
+  });
+
   it('leaves recipes() unchanged when the delete is cancelled', () => {
     fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
     const delete$ = new Subject<boolean>();

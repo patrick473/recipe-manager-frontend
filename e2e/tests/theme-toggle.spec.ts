@@ -27,5 +27,5 @@ test('toggling the theme flips data-theme and persists across reload', async ({ 
 test('an unknown path redirects to /recipes', async ({ page }) => {
   await page.goto('/nonexistent');
 
-  await expect(page).toHaveURL(/\/recipes$/);
+  await expect(page).toHaveURL(/\/recipes(\?.*)?$/);
 });

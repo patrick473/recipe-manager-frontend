@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
   FormControl,
@@ -9,6 +10,7 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ButtonDirective } from '../../shared/button.directive';
+import { createFormSubmitState } from '../../shared/form-submit-state.util';
 
 /**
  * Public login form. On success, navigates to the `returnUrl` query param
@@ -27,6 +29,7 @@ export class LoginComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly form: FormGroup<{
     username: FormControl<string>;
@@ -36,8 +39,10 @@ export class LoginComponent {
     password: ['', Validators.required],
   });
 
-  protected readonly submitting = signal(false);
-  protected readonly submitError = signal<string | null>(null);
+  private readonly formSubmitState = createFormSubmitState(this.form);
+  protected readonly submitting = this.formSubmitState.submitting;
+  protected readonly submitError = this.formSubmitState.submitError;
+  protected readonly isInvalid = this.formSubmitState.isInvalid;
 
   protected onSubmit(): void {
     if (this.form.invalid) {
@@ -50,21 +55,19 @@ export class LoginComponent {
     this.submitting.set(true);
     this.submitError.set(null);
 
-    this.authService.login(username, password).subscribe({
-      next: () => {
-        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/recipes';
-        this.router.navigateByUrl(returnUrl);
-      },
-      error: (err) => {
-        this.submitError.set(err.error?.detail ?? 'Invalid username or password.');
-        this.submitting.set(false);
-        console.error(err);
-      },
-    });
-  }
-
-  protected isInvalid(field: string): boolean {
-    const ctrl = this.form.get(field);
-    return !!(ctrl && ctrl.invalid && ctrl.touched);
+    this.authService
+      .login(username, password)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/recipes';
+          this.router.navigateByUrl(returnUrl);
+        },
+        error: (err) => {
+          this.submitError.set(err.error?.detail ?? 'Invalid username or password.');
+          this.submitting.set(false);
+          console.error(err);
+        },
+      });
   }
 }

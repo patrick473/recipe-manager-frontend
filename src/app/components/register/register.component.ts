@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
   FormControl,
@@ -9,6 +10,7 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ButtonDirective } from '../../shared/button.directive';
+import { createFormSubmitState } from '../../shared/form-submit-state.util';
 
 /**
  * Public registration form. Registering auto-logs-in (mirrors the backend's
@@ -27,6 +29,7 @@ export class RegisterComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly form: FormGroup<{
     username: FormControl<string>;
@@ -36,8 +39,10 @@ export class RegisterComponent {
     password: ['', [Validators.required, Validators.minLength(8)]],
   });
 
-  protected readonly submitting = signal(false);
-  protected readonly submitError = signal<string | null>(null);
+  private readonly formSubmitState = createFormSubmitState(this.form);
+  protected readonly submitting = this.formSubmitState.submitting;
+  protected readonly submitError = this.formSubmitState.submitError;
+  protected readonly isInvalid = this.formSubmitState.isInvalid;
 
   protected onSubmit(): void {
     if (this.form.invalid) {
@@ -50,22 +55,20 @@ export class RegisterComponent {
     this.submitting.set(true);
     this.submitError.set(null);
 
-    this.authService.register(username, password).subscribe({
-      next: () => {
-        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/recipes';
-        this.router.navigateByUrl(returnUrl);
-      },
-      error: (err) => {
-        this.submitError.set(err.error?.detail ?? 'Registration failed. Please try again.');
-        this.submitting.set(false);
-        console.error(err);
-      },
-    });
-  }
-
-  protected isInvalid(field: string): boolean {
-    const ctrl = this.form.get(field);
-    return !!(ctrl && ctrl.invalid && ctrl.touched);
+    this.authService
+      .register(username, password)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/recipes';
+          this.router.navigateByUrl(returnUrl);
+        },
+        error: (err) => {
+          this.submitError.set(err.error?.detail ?? 'Registration failed. Please try again.');
+          this.submitting.set(false);
+          console.error(err);
+        },
+      });
   }
 
   protected get passwordError(): string {
