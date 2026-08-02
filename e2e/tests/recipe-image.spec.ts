@@ -23,10 +23,7 @@ function writeTempPng(base64: string, name: string): string {
   // Date.now()-based name can collide across workers started in the same
   // millisecond, letting one worker's afterAll delete a file another
   // worker's still-running test needs. A random id per call is collision-free.
-  const filePath = path.join(
-    os.tmpdir(),
-    `recipe-image-e2e-${crypto.randomUUID()}-${name}.png`,
-  );
+  const filePath = path.join(os.tmpdir(), `recipe-image-e2e-${crypto.randomUUID()}-${name}.png`);
   fs.writeFileSync(filePath, Buffer.from(base64, 'base64'));
   return filePath;
 }
