@@ -3,6 +3,8 @@ import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { AuthService as GeneratedAuthService } from '../api/generated/auth/auth.service';
 import { AuthResponse } from '../models/auth.model';
+import { FavoritesService } from './favorites.service';
+import { RecentlyViewedService } from './recently-viewed.service';
 
 const STORAGE_KEY = 'auth';
 
@@ -22,6 +24,8 @@ interface StoredAuth {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly api = inject(GeneratedAuthService);
+  private readonly favoritesService = inject(FavoritesService);
+  private readonly recentlyViewedService = inject(RecentlyViewedService);
 
   readonly currentUser = signal<{ userId: number; username: string } | null>(this.readStoredUser());
   readonly token = signal<string | null>(this.readStoredToken());
@@ -50,6 +54,8 @@ export class AuthService {
     localStorage.removeItem(STORAGE_KEY);
     this.token.set(null);
     this.currentUser.set(null);
+    this.favoritesService.clear();
+    this.recentlyViewedService.clear();
   }
 
   private storeSession(response: AuthResponse): void {

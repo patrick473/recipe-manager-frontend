@@ -12,6 +12,7 @@ export interface RecipeRequestBody {
   title: string;
   description?: string | null;
   content: string;
+  servings?: number | null;
 }
 
 export interface RecipeResponseBody extends RecipeRequestBody {

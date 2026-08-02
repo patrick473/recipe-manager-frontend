@@ -4,6 +4,8 @@ import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthResponse } from '../models/auth.model';
 import { AuthService } from './auth.service';
+import { FavoritesService } from './favorites.service';
+import { RecentlyViewedService } from './recently-viewed.service';
 
 const mockAuthResponse: AuthResponse = {
   token: 'jwt-token-value',
@@ -132,6 +134,24 @@ describe('AuthService', () => {
       expect(service.isAuthenticated()).toBe(false);
       expect(localStorage.getItem('auth')).toBeNull();
       httpMock.expectNone(() => true);
+    });
+
+    it('clears favorites and recently-viewed stores', () => {
+      const service = TestBed.inject(AuthService);
+      const favoritesService = TestBed.inject(FavoritesService);
+      const recentlyViewedService = TestBed.inject(RecentlyViewedService);
+
+      favoritesService.toggle(42);
+      recentlyViewedService.record(42);
+      expect(favoritesService.favoriteIds().size).toBe(1);
+      expect(recentlyViewedService.recentIds().length).toBe(1);
+
+      service.logout();
+
+      expect(favoritesService.favoriteIds().size).toBe(0);
+      expect(recentlyViewedService.recentIds().length).toBe(0);
+      expect(JSON.parse(localStorage.getItem('recipeFavorites')!)).toEqual([]);
+      expect(JSON.parse(localStorage.getItem('recipeRecentlyViewed')!)).toEqual([]);
     });
   });
 });

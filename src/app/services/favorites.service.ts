@@ -21,6 +21,18 @@ export class FavoritesService {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...next]));
   }
 
+  remove(id: number): void {
+    const next = new Set(this.favoriteIds());
+    next.delete(id);
+    this.favoriteIds.set(next);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...next]));
+  }
+
+  clear(): void {
+    this.favoriteIds.set(new Set());
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+  }
+
   private readStorage(): ReadonlySet<number> {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return new Set();

@@ -113,4 +113,47 @@ describe('authInterceptor', () => {
     expect(logoutSpy).not.toHaveBeenCalled();
     expect(navigateSpy).not.toHaveBeenCalled();
   });
+
+  it('does not log out or navigate on a 401 from /auth/login (bad credentials)', () => {
+    const logoutSpy = vi.spyOn(authService, 'logout');
+    const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+
+    let error: unknown;
+    http.post('/auth/login', { username: 'a', password: 'wrong' }).subscribe({
+      next: () => {
+        throw new Error('expected an error, got a value');
+      },
+      error: (err) => (error = err),
+    });
+
+    const req = httpMock.expectOne('/auth/login');
+    req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+
+    expect((error as { status: number }).status).toBe(401);
+
+    expect(logoutSpy).not.toHaveBeenCalled();
+    expect(navigateSpy).not.toHaveBeenCalled();
+  });
+
+  it('still logs out and navigates on a 401 from an authenticated endpoint', () => {
+    authService.token.set('my-token');
+    const logoutSpy = vi.spyOn(authService, 'logout');
+    const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+
+    let error: unknown;
+    http.get('/recipes').subscribe({
+      next: () => {
+        throw new Error('expected an error, got a value');
+      },
+      error: (err) => (error = err),
+    });
+
+    const req = httpMock.expectOne('/recipes');
+    req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+
+    expect((error as { status: number }).status).toBe(401);
+
+    expect(logoutSpy).toHaveBeenCalled();
+    expect(navigateSpy).toHaveBeenCalledWith('/login');
+  });
 });

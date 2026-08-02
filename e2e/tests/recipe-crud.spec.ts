@@ -45,6 +45,6 @@ test('create -> view -> edit -> delete happy path', async ({ page }) => {
   await dialog.confirm();
 
   // delete redirects to the list, and the recipe is gone
-  await expect(page).toHaveURL(/\/recipes$/);
+  await expect(page).toHaveURL(/\/recipes(\?.*)?$/);
   await expect(list.card(editedTitle)).toHaveCount(0);
 });

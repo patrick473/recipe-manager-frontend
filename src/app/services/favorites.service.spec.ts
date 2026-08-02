@@ -86,4 +86,26 @@ describe('FavoritesService', () => {
       expect(JSON.parse(localStorage.getItem('recipeFavorites')!)).toEqual([8]);
     });
   });
+
+  describe('remove()', () => {
+    it('deletes an id from the set and writes through to localStorage', () => {
+      localStorage.setItem('recipeFavorites', JSON.stringify([7, 8]));
+      const service = TestBed.inject(FavoritesService);
+
+      service.remove(7);
+
+      expect(service.favoriteIds()).toEqual(new Set([8]));
+      expect(JSON.parse(localStorage.getItem('recipeFavorites')!)).toEqual([8]);
+    });
+
+    it('is a no-op when the id is not present', () => {
+      localStorage.setItem('recipeFavorites', JSON.stringify([8]));
+      const service = TestBed.inject(FavoritesService);
+
+      service.remove(99);
+
+      expect(service.favoriteIds()).toEqual(new Set([8]));
+      expect(JSON.parse(localStorage.getItem('recipeFavorites')!)).toEqual([8]);
+    });
+  });
 });

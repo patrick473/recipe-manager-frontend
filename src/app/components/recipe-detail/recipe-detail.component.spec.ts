@@ -27,7 +27,10 @@ describe('RecipeDetailComponent', () => {
   };
   let fakeRouter: { navigate: ReturnType<typeof vi.fn> };
   let fakeSanitizer: { bypassSecurityTrustHtml: ReturnType<typeof vi.fn> };
-  let fakeRecentlyViewedService: { record: ReturnType<typeof vi.fn> };
+  let fakeRecentlyViewedService: {
+    record: ReturnType<typeof vi.fn>;
+    remove: ReturnType<typeof vi.fn>;
+  };
 
   function configure(routeId: string | null = '1') {
     const fakeRoute = {
@@ -60,7 +63,7 @@ describe('RecipeDetailComponent', () => {
     fakeSanitizer = {
       bypassSecurityTrustHtml: vi.fn((html: string) => html),
     };
-    fakeRecentlyViewedService = { record: vi.fn() };
+    fakeRecentlyViewedService = { record: vi.fn(), remove: vi.fn() };
   });
 
   afterEach(() => {
@@ -80,6 +83,27 @@ describe('RecipeDetailComponent', () => {
     expect(component['loading']()).toBe(false);
     expect(fakeSanitizer.bypassSecurityTrustHtml).toHaveBeenCalledWith('<p>plain text</p>\n');
     expect(component['renderedContent']()).toBe('<p>plain text</p>\n');
+  });
+
+  it('strips XSS payloads (e.g. onerror handlers, <script> tags) from recipe content before it reaches bypassSecurityTrustHtml', () => {
+    const maliciousRecipe: Recipe = {
+      ...mockRecipe,
+      content: 'Tasty <img src=x onerror="alert(1)"> dish <script>alert(2)</script>',
+    };
+    fakeRecipeService.getById.mockReturnValue(of(maliciousRecipe));
+    configure('1');
+
+    const fixture = TestBed.createComponent(RecipeDetailComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    const sanitizedHtml = fakeSanitizer.bypassSecurityTrustHtml.mock.calls[0][0] as string;
+
+    expect(sanitizedHtml).not.toContain('onerror');
+    expect(sanitizedHtml).not.toContain('<script');
+    expect(sanitizedHtml).not.toContain('alert(1)');
+    expect(sanitizedHtml).not.toContain('alert(2)');
+    expect(component['renderedContent']()).toBe(sanitizedHtml);
   });
 
   it('sets a "not found" message on a 404 load error', () => {
@@ -150,6 +174,32 @@ describe('RecipeDetailComponent', () => {
     delete$.complete();
 
     expect(fakeRouter.navigate).toHaveBeenCalledWith(['/recipes']);
+  });
+
+  it('removes the recipe from favorites and recently-viewed stores when the delete is confirmed', () => {
+    fakeRecipeService.getById.mockReturnValue(of(mockRecipe));
+    const delete$ = new Subject<boolean>();
+    fakeRecipeService.deleteWithConfirm.mockImplementation(
+      (recipe: Recipe, onConfirmed?: () => void) => {
+        onConfirmed?.();
+        return delete$.asObservable();
+      },
+    );
+    configure('1');
+
+    const fixture = TestBed.createComponent(RecipeDetailComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    const favoritesService = TestBed.inject(FavoritesService);
+    const favoritesRemoveSpy = vi.spyOn(favoritesService, 'remove');
+
+    component['deleteRecipe']();
+    delete$.next(true);
+    delete$.complete();
+
+    expect(favoritesRemoveSpy).toHaveBeenCalledWith(mockRecipe.id);
+    expect(fakeRecentlyViewedService.remove).toHaveBeenCalledWith(mockRecipe.id);
   });
 
   it('does not navigate when the delete is cancelled', () => {
