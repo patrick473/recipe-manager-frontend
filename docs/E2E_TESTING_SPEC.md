@@ -38,7 +38,7 @@ there's no separate server-without-browser layer worth targeting.
 ## Scope
 
 P0: `recipe-crud.spec.ts` (create → view → edit → delete full lifecycle),
-`recipe-list.spec.ts` (empty/loaded states, delete-with-confirm), 
+`recipe-list.spec.ts` (empty/loaded states, delete-with-confirm),
 `recipe-not-found.spec.ts` (bad id shows not-found message),
 `recipe-validation.spec.ts` (empty-field/maxlength inline validation,
 backend-rejected submission surfaces the joined error message). P1:

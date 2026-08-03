@@ -18,7 +18,7 @@ low-risk, nice-to-have coverage.
 - Component tests use `TestBed` + `ComponentFixture`, not shallow-rendering
   helpers — matches the codebase's `inject()`-based DI.
 - HTTP-touching code (`RecipeService`) is tested against
-  `HttpTestingController`; components that *consume* `RecipeService` are
+  `HttpTestingController`; components that _consume_ `RecipeService` are
   tested with a **fake/stub service** instead, so component specs assert
   component behavior (signal state, template bindings, navigation) rather
   than re-verifying HTTP wiring already covered elsewhere.

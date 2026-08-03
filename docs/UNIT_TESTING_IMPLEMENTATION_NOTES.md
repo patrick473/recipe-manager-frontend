@@ -28,7 +28,7 @@ every touched file.
 
 - The documented run command (`npx vitest run <path>`, per `CLAUDE.md` and
   the spec) fails immediately with `Need to call TestBed.initTestEnvironment()
-  first` — `@angular/build:unit-test` builds Vitest's config programmatically,
+first` — `@angular/build:unit-test` builds Vitest's config programmatically,
   so there's no on-disk `vitest.config.ts`. Working form:
   `npx ng test --include=<path> --watch=false`. All three agents hit this
   independently; saved to persistent memory, worth fixing in `CLAUDE.md`.

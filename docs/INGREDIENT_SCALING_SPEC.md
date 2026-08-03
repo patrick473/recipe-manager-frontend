@@ -83,8 +83,7 @@ navigation.
 
 ## Deferred
 
-- Structured `Ingredient`/`Quantity`/`Unit` entities (`FUTURE_IDEAS.md` item
-  12) — fixes every heuristic gap above, at the cost of a backend migration
+- Structured `Ingredient`/`Quantity`/`Unit` entities (`FUTURE_IDEAS.md` item 12) — fixes every heuristic gap above, at the cost of a backend migration
   and content-editing UI rewrite
 - Remembering the last-used scale factor per recipe (e.g. `localStorage`,
   mirroring item 9's favorites pattern) — deliberately left as reset-on-load

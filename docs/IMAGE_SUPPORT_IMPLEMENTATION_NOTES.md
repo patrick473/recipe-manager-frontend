@@ -44,7 +44,7 @@ typecheck/lint/prettier.
 - Reading the actual frontend diff (not just test results) surfaced a real
   gap the parallel file-scoped split created: the form's create-mode
   partial-failure path navigated with `router state: {imageUploadFailed:
-  true}`, but nothing consumed it, since the detail-page agent was
+true}`, but nothing consumed it, since the detail-page agent was
   scoped away from the form. The spec's required user-facing message would
   silently never have appeared. Fixed by adding the consumer (a signal
   seeded from `history.state` + a notification banner) to
@@ -56,7 +56,7 @@ typecheck/lint/prettier.
   ordering — a hard technical dependency (Part 1→2→3, can't parallelize)
   versus risk-management ordering (list/detail before form, safe to
   parallelize once the one real shared prerequisite is factored out).
-  Reading *why* a spec sequences something, not just *that* it does, is
+  Reading _why_ a spec sequences something, not just _that_ it does, is
   what determines whether subagents can fan out.
 - Splitting frontend work across parallel agents by file scope is safe for
   each agent's own files but can hide a gap at the seam between them — a

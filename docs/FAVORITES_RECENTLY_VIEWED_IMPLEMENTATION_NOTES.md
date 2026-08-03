@@ -27,7 +27,7 @@ reload, un-favoriting from the strip overlay, clearing recently-viewed.
   call site in `ngOnInit`; Part 2: template/button wiring), and each
   re-read the file before editing so the second to finish preserved the
   first's already-landed change. Safe here specifically because the spec
-  had partitioned the *logical* change into non-overlapping concerns before
+  had partitioned the _logical_ change into non-overlapping concerns before
   dispatch, not just because the file happened to have room in both spots.
 - Same Node/Playwright resolution gotcha as
   `INGREDIENT_SCALING_IMPLEMENTATION_NOTES.md`: a verification script only

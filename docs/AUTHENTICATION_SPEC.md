@@ -3,7 +3,7 @@
 Spec for [FUTURE_IDEAS.md](FUTURE_IDEAS.md) item 11: Spring Security + JWT,
 recipes scoped to a `userId`, login/register on the frontend.
 
-**Key decision:** "per-user" means *ownership*, not *visibility*. Every
+**Key decision:** "per-user" means _ownership_, not _visibility_. Every
 recipe belongs to one account, but `GET /recipes`, `GET /recipes/{id}`, and
 the hero-image endpoint are public — no auth header needed, readable by
 anyone including logged-out visitors. Only mutation (create/edit/delete/
