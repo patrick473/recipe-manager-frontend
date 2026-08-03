@@ -98,10 +98,9 @@ export function scaleIngredientsMarkdown(content: string, factor: number): strin
     }
 
     const token = quantityMatch[0];
-    const parsed = parseQuantityToken(token);
-    if (parsed === null) {
-      return line;
-    }
+    // LEADING_QUANTITY only ever captures a substring that also satisfies one
+    // of parseQuantityToken's own patterns, so this is never null.
+    const parsed = parseQuantityToken(token)!;
 
     const scaled = formatScaledQuantity(parsed * factor, token.includes('/'));
     return `${marker}${scaled}${rest.slice(token.length)}`;

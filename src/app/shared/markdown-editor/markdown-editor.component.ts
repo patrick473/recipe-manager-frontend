@@ -44,7 +44,7 @@ const DIM_MARK_NODES = new Set([
 const ATX_HEADING_RE = /^ATXHeading([1-6])$/;
 
 /** Applies `cls` as a line decoration to every line the [from, to) range spans. */
-function addLineDecorations(
+export function addLineDecorations(
   decorations: Range<Decoration>[],
   doc: EditorState['doc'],
   from: number,
@@ -67,7 +67,7 @@ function addLineDecorations(
  * styling everywhere, with the raw syntax marks dimmed unless they're on the
  * line containing the cursor.
  */
-function buildLivePreviewDecorations(view: EditorView): DecorationSet {
+export function buildLivePreviewDecorations(view: EditorView): DecorationSet {
   const { state } = view;
   const decorations: Range<Decoration>[] = [];
   const activeLine = state.doc.lineAt(state.selection.main.head).number;
@@ -79,7 +79,7 @@ function buildLivePreviewDecorations(view: EditorView): DecorationSet {
   };
 
   const addMark = (from: number, to: number, cls: string): void => {
-    if (to > from) decorations.push(Decoration.mark({ class: cls }).range(from, to));
+    decorations.push(Decoration.mark({ class: cls }).range(from, to));
   };
 
   for (const { from, to } of view.visibleRanges) {
@@ -164,7 +164,7 @@ const livePreviewPlugin = ViewPlugin.fromClass(
  * on both sides — e.g. `toggleWrap(view, '**')` for bold. There's no built-in
  * "wrap selection" command in `@codemirror/commands`, so this is hand-rolled.
  */
-function toggleWrap(view: EditorView, marker: string): boolean {
+export function toggleWrap(view: EditorView, marker: string): boolean {
   const { state } = view;
   const tr = state.changeByRange((range) => {
     const { from, to } = range;

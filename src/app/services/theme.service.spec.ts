@@ -55,6 +55,14 @@ describe('ThemeService', () => {
 
       expect(service.darkMode()).toBe(false);
     });
+
+    it('defaults to light mode when localStorage has no stored theme and matchMedia is unsupported', () => {
+      vi.spyOn(Storage.prototype, 'getItem').mockReturnValue(null);
+
+      const service = TestBed.inject(ThemeService);
+
+      expect(service.darkMode()).toBe(false);
+    });
   });
 
   describe('toggle()', () => {

@@ -546,6 +546,24 @@ describe('RecipeListComponent', () => {
       );
     });
 
+    it('toggleTag a second time with the same tag removes it again', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(taggedRecipes)));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      component['toggleTag']('breakfast');
+      expect(component['activeTags']().has('breakfast')).toBe(true);
+
+      component['toggleTag']('breakfast');
+
+      expect(component['activeTags']().has('breakfast')).toBe(false);
+      expect(fakeRecipeService.getAll).toHaveBeenLastCalledWith(
+        expect.objectContaining({ tags: undefined }),
+      );
+    });
+
     it('setSort calls getAll immediately with the new sort param', () => {
       fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
 
@@ -573,6 +591,22 @@ describe('RecipeListComponent', () => {
 
       expect(component['sortDir']()).toBe('desc');
       expect(localStorage.getItem('recipeListSortDir')).toBe('desc');
+    });
+
+    it('setSort flips direction back to asc on a third call with the same key', () => {
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      component['setSort']('title');
+      expect(component['sortDir']()).toBe('desc');
+
+      component['setSort']('title');
+
+      expect(component['sortDir']()).toBe('asc');
+      expect(localStorage.getItem('recipeListSortDir')).toBe('asc');
     });
 
     it('changing the sort <select> switches sortKey() and refetches', () => {
@@ -921,6 +955,61 @@ describe('RecipeListComponent', () => {
         sort: 'createdAt,desc',
         page: 2,
       });
+    });
+
+    it('falls back to the localStorage sort preference when the sort param field is invalid', () => {
+      localStorage.setItem('recipeListSortKey', 'createdAt');
+      localStorage.setItem('recipeListSortDir', 'desc');
+      TestBed.overrideProvider(ActivatedRoute, {
+        useValue: routeWithQueryParams({ sort: 'notARealField,asc' }),
+      });
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      expect(component['sortKey']()).toBe('createdAt');
+      expect(component['sortDir']()).toBe('desc');
+    });
+
+    it('defaults sortKey/sortDir to title/asc when neither the sort param nor localStorage are set', () => {
+      TestBed.overrideProvider(ActivatedRoute, { useValue: routeWithQueryParams({}) });
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      expect(component['sortKey']()).toBe('title');
+      expect(component['sortDir']()).toBe('asc');
+    });
+
+    it('defaults sortDir to asc when the sort param field is valid but the dir is not "desc"', () => {
+      TestBed.overrideProvider(ActivatedRoute, {
+        useValue: routeWithQueryParams({ sort: 'createdAt,bogus' }),
+      });
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      expect(component['sortKey']()).toBe('createdAt');
+      expect(component['sortDir']()).toBe('asc');
+    });
+
+    it('defaults page to 0 when the page param is not a valid non-negative integer', () => {
+      TestBed.overrideProvider(ActivatedRoute, {
+        useValue: routeWithQueryParams({ page: 'not-a-number' }),
+      });
+      fakeRecipeService.getAll.mockReturnValue(of(toPage(mockRecipes)));
+
+      const fixture = TestBed.createComponent(RecipeListComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      expect(component['page']()).toBe(0);
     });
 
     it('updates the route query params (merging, without a new history entry) when a filter changes', () => {
