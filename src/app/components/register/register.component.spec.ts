@@ -49,6 +49,18 @@ describe('RegisterComponent', () => {
     expect(component['form'].touched).toBe(true);
   });
 
+  it('reports the required message when password is empty and touched', () => {
+    configure(null);
+
+    const fixture = TestBed.createComponent(RegisterComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component['form'].get('password')?.markAsTouched();
+
+    expect(component['passwordError']).toBe('Password is required.');
+  });
+
   it('reports the minlength message when password is under 8 characters and touched', () => {
     configure(null);
 
@@ -61,6 +73,18 @@ describe('RegisterComponent', () => {
 
     expect(component['isInvalid']('password')).toBe(true);
     expect(component['passwordError']).toBe('Password must be at least 8 characters.');
+  });
+
+  it('reports no password error once the password is valid', () => {
+    configure(null);
+
+    const fixture = TestBed.createComponent(RegisterComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component['form'].get('password')?.setValue('longenoughpassword');
+
+    expect(component['passwordError']).toBe('');
   });
 
   it('valid submit calls AuthService.register() and navigates to returnUrl on success', () => {

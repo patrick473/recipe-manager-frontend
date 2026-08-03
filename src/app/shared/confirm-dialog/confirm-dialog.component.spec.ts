@@ -84,5 +84,32 @@ describe('ConfirmDialogComponent', () => {
 
       expect(respondSpy).toHaveBeenCalledWith(true);
     });
+
+    it('pressing Escape on the backdrop calls respond(false)', () => {
+      const respondSpy = vi.spyOn(service, 'respond');
+      const backdrop = fixture.nativeElement.querySelector('.backdrop') as HTMLElement;
+
+      backdrop.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      expect(respondSpy).toHaveBeenCalledWith(false);
+    });
+
+    it('pressing a key inside the dialog does not bubble to the backdrop', () => {
+      const respondSpy = vi.spyOn(service, 'respond');
+      const dialog = fixture.nativeElement.querySelector('.dialog') as HTMLElement;
+
+      dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      expect(respondSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when the pending request has no content', () => {
+    it('does not render a .dialog-content element', () => {
+      service.confirm({ label: 'Delete X?' });
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.dialog-content')).toBeNull();
+    });
   });
 });

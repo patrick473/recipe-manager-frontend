@@ -170,6 +170,27 @@ describe('RecipeFormComponent', () => {
       expect(fakeRecipeService.update).not.toHaveBeenCalled();
     });
 
+    it('coerces missing tags/prepTime/cookTime/servings to empty/null defaults', () => {
+      const sparseRecipe: Recipe = {
+        ...mockRecipe,
+        tags: undefined,
+        prepTimeMinutes: undefined,
+        cookTimeMinutes: undefined,
+        servings: undefined,
+      };
+      history.pushState({ cloneFrom: sparseRecipe }, '');
+      configure(null);
+
+      const fixture = TestBed.createComponent(RecipeFormComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      expect(component['form'].get('tags')?.value).toEqual([]);
+      expect(component['form'].get('prepTimeMinutes')?.value).toBeNull();
+      expect(component['form'].get('cookTimeMinutes')?.value).toBeNull();
+      expect(component['form'].get('servings')?.value).toBeNull();
+    });
+
     it('ignores history.state.cloneFrom when a :id route param is present (edit mode takes precedence)', () => {
       history.pushState({ cloneFrom: mockRecipe }, '');
       fakeRecipeService.getById.mockReturnValue(of({ ...mockRecipe, id: 5, title: 'Original' }));
@@ -198,6 +219,27 @@ describe('RecipeFormComponent', () => {
       expect(component['form'].get('title')?.value).toBe(mockRecipe.title);
       expect(component['form'].get('description')?.value).toBe('');
       expect(component['form'].get('content')?.value).toBe(mockRecipe.content);
+    });
+
+    it('coerces missing tags/prepTime/cookTime/servings to empty/null defaults', () => {
+      const sparseRecipe: Recipe = {
+        ...mockRecipe,
+        tags: undefined,
+        prepTimeMinutes: undefined,
+        cookTimeMinutes: undefined,
+        servings: undefined,
+      };
+      fakeRecipeService.getById.mockReturnValue(of(sparseRecipe));
+      configure('5');
+
+      const fixture = TestBed.createComponent(RecipeFormComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      expect(component['form'].get('tags')?.value).toEqual([]);
+      expect(component['form'].get('prepTimeMinutes')?.value).toBeNull();
+      expect(component['form'].get('cookTimeMinutes')?.value).toBeNull();
+      expect(component['form'].get('servings')?.value).toBeNull();
     });
 
     it('calls recipeService.update(id, ...) on submit', () => {
@@ -355,6 +397,18 @@ describe('RecipeFormComponent', () => {
       expect(component['imagePreviewUrl']()).toBeNull();
     });
 
+    it('is a no-op when the file input has no selected file', () => {
+      configure(null);
+      const fixture = TestBed.createComponent(RecipeFormComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      selectFile(component, undefined);
+
+      expect(component['imageError']()).toBeNull();
+      expect(component['selectedFile']()).toBeNull();
+    });
+
     it('accepts a valid file: sets selectedFile/imagePreviewUrl and clears imageError/imageRemoved', () => {
       configure(null);
       const fixture = TestBed.createComponent(RecipeFormComponent);
@@ -483,6 +537,56 @@ describe('RecipeFormComponent', () => {
       fixture.detectChanges();
 
       expect(component['isInvalid']('title')).toBe(false);
+    });
+
+    it('reports no title error once the title is valid', () => {
+      configure(null);
+
+      const fixture = TestBed.createComponent(RecipeFormComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      component['form'].get('title')?.setValue('A valid title');
+
+      expect(component['titleError']).toBe('');
+    });
+  });
+
+  describe('tag suggestions', () => {
+    it('collects and de-duplicates tags across all recipes, treating a missing tags array as empty', () => {
+      fakeRecipeService.getAll.mockReturnValue(
+        of({
+          content: [
+            { ...mockRecipe, id: 1, tags: ['dinner', 'quick'] },
+            { ...mockRecipe, id: 2, tags: undefined },
+            { ...mockRecipe, id: 3, tags: ['quick', 'dessert'] },
+          ],
+          page: 0,
+          size: 100,
+          totalElements: 3,
+          totalPages: 1,
+        }),
+      );
+      configure(null);
+
+      const fixture = TestBed.createComponent(RecipeFormComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      expect(component['tagSuggestions']()).toEqual(['dessert', 'dinner', 'quick']);
+    });
+
+    it('logs the error and leaves tagSuggestions empty when loading suggestions fails', () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      fakeRecipeService.getAll.mockReturnValue(throwError(() => new Error('boom')));
+      configure(null);
+
+      const fixture = TestBed.createComponent(RecipeFormComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      expect(component['tagSuggestions']()).toEqual([]);
+      expect(consoleErrorSpy).toHaveBeenCalled();
     });
   });
 });

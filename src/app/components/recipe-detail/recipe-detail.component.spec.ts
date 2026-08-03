@@ -445,6 +445,63 @@ describe('RecipeDetailComponent', () => {
     }
   });
 
+  describe('before the recipe has loaded (recipe() is still null)', () => {
+    function createUnloadedFixture() {
+      fakeRecipeService.getById.mockReturnValue(new Subject());
+      configure('1');
+      return TestBed.createComponent(RecipeDetailComponent);
+    }
+
+    it('canScale() is false and renderedContent() is empty', () => {
+      const fixture = createUnloadedFixture();
+      const component = fixture.componentInstance;
+
+      expect(component['canScale']()).toBe(false);
+      expect(component['renderedContent']()).toBe('');
+    });
+
+    it('onServingsTargetChange() is a no-op', () => {
+      const fixture = createUnloadedFixture();
+      const component = fixture.componentInstance;
+
+      component['onServingsTargetChange'](8);
+
+      expect(component['scaleFactor']()).toBe(1);
+    });
+
+    it('cloneRecipe() is a no-op', () => {
+      const fixture = createUnloadedFixture();
+      const component = fixture.componentInstance;
+
+      component['cloneRecipe']();
+
+      expect(fakeRouter.navigate).not.toHaveBeenCalled();
+    });
+
+    it('deleteRecipe() is a no-op', () => {
+      const fixture = createUnloadedFixture();
+      const component = fixture.componentInstance;
+
+      component['deleteRecipe']();
+
+      expect(fakeRecipeService.deleteWithConfirm).not.toHaveBeenCalled();
+    });
+  });
+
+  it('onServingsTargetChange() is a no-op when target is below 1', () => {
+    const recipe: Recipe = { ...mockRecipe, content: scalableContent, servings: 4 };
+    fakeRecipeService.getById.mockReturnValue(of(recipe));
+    configure('1');
+
+    const fixture = TestBed.createComponent(RecipeDetailComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component['onServingsTargetChange'](0);
+
+    expect(component['scaleFactor']()).toBe(1);
+  });
+
   it('resets the scale factor back to 1 when a different recipe loads', () => {
     const recipe: Recipe = { ...mockRecipe, content: scalableContent, servings: 4 };
     fakeRecipeService.getById.mockReturnValue(of(recipe));

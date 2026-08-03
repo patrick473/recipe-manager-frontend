@@ -85,6 +85,24 @@ describe('RecipeService', () => {
     expect(service.recipeCount()).toBe(42);
   });
 
+  it('getAll() clears the loading signal when the request errors', () => {
+    let error: unknown;
+    service.getAll({}).subscribe({
+      next: () => {
+        throw new Error('expected an error, got a value');
+      },
+      error: (err) => (error = err),
+    });
+    expect(service.loading()).toBe(true);
+
+    httpMock
+      .expectOne((r) => r.url.includes('/recipes'))
+      .flush('Server error', { status: 500, statusText: 'Internal Server Error' });
+
+    expect(service.loading()).toBe(false);
+    expect((error as { status: number }).status).toBe(500);
+  });
+
   it('delete() should decrement recipeCount signal', () => {
     // Seed the count
     service.getAll({}).subscribe();
