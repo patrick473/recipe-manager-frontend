@@ -1,12 +1,12 @@
 import { Route } from '@angular/router';
 import { describe, expect, it } from 'vitest';
-import { authGuard } from './guards/auth.guard';
 import { routes } from './app.routes';
 import { LoginComponent } from './components/login/login.component';
-import { RegisterComponent } from './components/register/register.component';
-import { RecipeListComponent } from './components/recipe-list/recipe-list.component';
-import { RecipeFormComponent } from './components/recipe-form/recipe-form.component';
 import { RecipeDetailComponent } from './components/recipe-detail/recipe-detail.component';
+import { RecipeFormComponent } from './components/recipe-form/recipe-form.component';
+import { RecipeListComponent } from './components/recipe-list/recipe-list.component';
+import { RegisterComponent } from './components/register/register.component';
+import { authGuard } from './guards/auth.guard';
 
 function findRoute(path: string): Route {
   const route = routes.find((r) => r.path === path);

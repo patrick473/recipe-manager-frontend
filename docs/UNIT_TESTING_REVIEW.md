@@ -15,7 +15,7 @@ inventing new ones.
 - Runner: Vitest through `@angular/build:unit-test` — confirmed still the
   only way to run a single file (`npx ng test --include=<path> --watch=false`;
   bare `npx vitest run` fails with `Need to call TestBed.initTestEnvironment()
-  first`, per the implementation notes).
+first`, per the implementation notes).
 - CI (`.github/workflows/ci.yml`) runs `npm run lint`, `format:check`, and
   `npm test -- --watch=false` on every push/PR to `main`. The `e2e` job in
   the same workflow is gated `if: false` — Playwright tests exist and pass
@@ -41,7 +41,7 @@ The spec's stated conventions are followed consistently across all 21 files:
   credentials, no logout) — the exact kind of edge case that's easy to get
   wrong and easy to skip in a spec.
 - Test names read as behavior (`'omits the Authorization header for
-  /auth/login even when a token is present'`), not implementation detail.
+/auth/login even when a token is present'`), not implementation detail.
 
 ## Gaps
 
