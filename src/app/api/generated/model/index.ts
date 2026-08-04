@@ -11,6 +11,7 @@
  */
 
 export * from './authResponse';
+export * from './ingredientDto';
 export * from './listRecipesParams';
 export * from './loginRequest';
 export * from './problemDetail';
@@ -19,6 +20,7 @@ export * from './recipeNotFoundResponse';
 export * from './recipePageResponse';
 export * from './recipeRequest';
 export * from './recipeResponse';
+export * from './recipeStepDto';
 export * from './registerRequest';
 export * from './unauthorizedResponse';
 export * from './uploadRecipeImageBody';

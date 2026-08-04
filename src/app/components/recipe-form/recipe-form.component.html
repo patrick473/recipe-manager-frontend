@@ -100,15 +100,37 @@
         (servingsChange)="form.controls.servings.setValue($event)"
       />
 
-      <!-- Content (Markdown) -->
-      <div class="field">
-        <label class="field-label" for="content"
-          >Content (Markdown) <span class="required-marker">*</span></label
-        >
-        <app-markdown-editor id="content" formControlName="content" />
-        @if (isInvalid('content')) {
-          <p class="field-error">Content is required.</p>
+      @if (legacyRecipe()) {
+        <div class="notification mb">
+          <strong>Legacy recipe.</strong> Add at least one ingredient and step before saving. The original body remains in Notes.
+        </div>
+      }
+
+      <section class="field structured-section" aria-labelledby="ingredients-heading">
+        <h3 id="ingredients-heading" class="field-label">
+          Ingredients <span class="required-marker">*</span>
+        </h3>
+        <app-ingredient-editor formControlName="ingredients" />
+        @if (isInvalid('ingredients')) {
+          <p class="field-error">Add at least one ingredient with a name.</p>
         }
+      </section>
+
+      <section class="field structured-section" aria-labelledby="steps-heading">
+        <h3 id="steps-heading" class="field-label">
+          Steps <span class="required-marker">*</span>
+        </h3>
+        <app-step-editor formControlName="steps" />
+        @if (isInvalid('steps')) {
+          <p class="field-error">Add at least one step with an instruction.</p>
+        }
+      </section>
+
+      <div class="field">
+        <label class="field-label" for="content">
+          Notes <span class="optional-label">(optional, Markdown)</span>
+        </label>
+        <app-markdown-editor id="content" formControlName="content" />
       </div>
 
       <div class="form-actions">

@@ -145,7 +145,33 @@
             }
           </div>
         }
-        <div class="markdown-body" [innerHTML]="renderedContent()"></div>
+        @if (hasStructuredContent()) {
+          <section class="recipe-section" aria-labelledby="ingredients-heading">
+            <h2 id="ingredients-heading">Ingredients</h2>
+            <ul class="ingredient-list">
+              @for (ingredient of r.ingredients; track $index) {
+                <li>{{ formatIngredient(ingredient) }}</li>
+              }
+            </ul>
+          </section>
+          <section class="recipe-section" aria-labelledby="steps-heading">
+            <h2 id="steps-heading">Steps</h2>
+            <ol class="step-list">
+              @for (step of r.steps; track $index) {
+                <li>{{ step.instruction }}</li>
+              }
+            </ol>
+          </section>
+          @if (r.content) {
+            <section class="recipe-section" aria-labelledby="notes-heading">
+              <h2 id="notes-heading">Notes</h2>
+              <div class="markdown-body" [innerHTML]="renderedNotes()"></div>
+            </section>
+          }
+        } @else {
+          <p class="legacy-label">Legacy recipe</p>
+          <div class="markdown-body" [innerHTML]="renderedNotes()"></div>
+        }
       </div>
     </div>
   }

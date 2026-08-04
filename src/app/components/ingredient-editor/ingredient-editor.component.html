@@ -1,0 +1,49 @@
+<div class="editor-list" (focusout)="markTouched()">
+  @for (row of rows.controls; track row; let index = $index) {
+    <fieldset
+      class="editor-row ingredient-row"
+      [formGroup]="row"
+      draggable="true"
+      (dragstart)="onDragStart(index)"
+      (dragover)="$event.preventDefault()"
+      (drop)="onDrop(index)"
+    >
+      <legend>Ingredient {{ index + 1 }}</legend>
+      <div class="row-toolbar">
+        <span class="drag-handle" title="Drag to reorder" aria-hidden="true">
+          <app-icon name="drag_indicator" [size]="18" />
+        </span>
+        <button appButton appearance="secondary" size="s" [iconOnly]="true" type="button" (click)="move(index, -1)" [disabled]="index === 0" [attr.aria-label]="'Move ingredient ' + (index + 1) + ' up'">
+          <app-icon name="arrow_upward" [size]="16" />
+        </button>
+        <button appButton appearance="secondary" size="s" [iconOnly]="true" type="button" (click)="move(index, 1)" [disabled]="index === rows.length - 1" [attr.aria-label]="'Move ingredient ' + (index + 1) + ' down'">
+          <app-icon name="arrow_downward" [size]="16" />
+        </button>
+        <button appButton appearance="secondary-destructive" size="s" [iconOnly]="true" type="button" (click)="remove(index)" [disabled]="rows.length === 1" [attr.aria-label]="'Remove ingredient ' + (index + 1)">
+          <app-icon name="trash" [size]="16" />
+        </button>
+      </div>
+
+      <label>Quantity<input class="field-input" type="number" min="0" step="any" formControlName="quantity" /></label>
+      <label class="range-toggle"><input type="checkbox" [checked]="row.controls.quantityMax.enabled" (change)="toggleRange(index, $any($event.target).checked)" /> Range</label>
+      @if (row.controls.quantityMax.enabled) {
+        <label>End quantity<input class="field-input" type="number" min="0" step="any" formControlName="quantityMax" /></label>
+      }
+      <label>Unit<input class="field-input" formControlName="unit" list="ingredient-units" maxlength="30" /></label>
+      <label class="ingredient-name">Name <span class="required-marker">*</span><input class="field-input" formControlName="name" maxlength="255" /></label>
+      <label class="ingredient-note">Note<input class="field-input" formControlName="note" maxlength="255" /></label>
+      @if (row.controls.name.touched && row.controls.name.invalid) {
+        <p class="field-error ingredient-error">Ingredient name is required.</p>
+      }
+      @if (row.errors?.['quantityRange']) {
+        <p class="field-error ingredient-error">End quantity must be at least the starting quantity.</p>
+      }
+    </fieldset>
+  }
+</div>
+<datalist id="ingredient-units">
+  @for (unit of unitSuggestions; track unit) { <option [value]="unit"></option> }
+</datalist>
+<button appButton appearance="secondary" type="button" (click)="add()">
+  <app-icon name="add" [size]="16" /> Add ingredient
+</button>
