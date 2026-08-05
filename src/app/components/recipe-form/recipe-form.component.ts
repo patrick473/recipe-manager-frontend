@@ -17,8 +17,6 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { of, switchMap } from 'rxjs';
-import { IngredientDto } from '../../api/generated/model/ingredientDto';
-import { RecipeStepDto } from '../../api/generated/model/recipeStepDto';
 import { Recipe } from '../../models/recipe.model';
 import { RecipeService } from '../../services/recipe.service';
 import { ButtonDirective } from '../../shared/button.directive';
@@ -26,8 +24,6 @@ import { resolveImageUrl } from '../../shared/image-url.util';
 import { LoaderComponent } from '../../shared/loader/loader.component';
 import { MarkdownEditorComponent } from '../../shared/markdown-editor/markdown-editor.component';
 import { PropertiesPanelComponent } from '../../shared/properties-panel/properties-panel.component';
-import { IngredientEditorComponent } from '../ingredient-editor/ingredient-editor.component';
-import { StepEditorComponent } from '../step-editor/step-editor.component';
 
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -56,8 +52,6 @@ const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
     LoaderComponent,
     MarkdownEditorComponent,
     PropertiesPanelComponent,
-    IngredientEditorComponent,
-    StepEditorComponent,
   ],
   templateUrl: './recipe-form.component.html',
   styleUrl: './recipe-form.component.scss',
@@ -74,8 +68,6 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
     title: FormControl<string>;
     description: FormControl<string>;
     content: FormControl<string>;
-    ingredients: FormControl<IngredientDto[]>;
-    steps: FormControl<RecipeStepDto[]>;
     tags: FormControl<string[]>;
     prepTimeMinutes: FormControl<number | null>;
     cookTimeMinutes: FormControl<number | null>;
@@ -83,9 +75,7 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
   }> = this.fb.nonNullable.group({
     title: ['', [Validators.required, Validators.maxLength(255)]],
     description: [''],
-    content: [''],
-    ingredients: this.fb.nonNullable.control<IngredientDto[]>([{ name: '' }]),
-    steps: this.fb.nonNullable.control<RecipeStepDto[]>([{ instruction: '' }]),
+    content: ['', Validators.required],
     tags: this.fb.nonNullable.control<string[]>([]),
     prepTimeMinutes: this.fb.control<number | null>(null),
     cookTimeMinutes: this.fb.control<number | null>(null),
@@ -99,7 +89,6 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
   protected readonly submitting = signal(false);
   protected readonly submitError = signal<string | null>(null);
   protected readonly tagSuggestions = signal<string[]>([]);
-  protected readonly legacyRecipe = signal(false);
 
   protected readonly selectedFile = signal<File | null>(null);
   protected readonly imagePreviewUrl = signal<string | null>(null);
@@ -139,15 +128,12 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
             this.form.patchValue({
               title: data.title,
               description: data.description ?? '',
-              content: data.content ?? '',
-              ingredients: data.ingredients,
-              steps: data.steps,
+              content: data.content,
               tags: data.tags ?? [],
               prepTimeMinutes: data.prepTimeMinutes ?? null,
               cookTimeMinutes: data.cookTimeMinutes ?? null,
               servings: data.servings ?? null,
             });
-            this.legacyRecipe.set(data.ingredients.length === 0 && data.steps.length === 0 && !!data.content);
             this.loading.set(false);
           },
           error: (err) => {
@@ -162,9 +148,7 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
         this.form.patchValue({
           title: `${cloneFrom.title} (Copy)`,
           description: cloneFrom.description ?? '',
-          content: cloneFrom.content ?? '',
-          ingredients: cloneFrom.ingredients.map((ingredient) => ({ ...ingredient })),
-          steps: cloneFrom.steps.map((step) => ({ ...step })),
+          content: cloneFrom.content,
           tags: cloneFrom.tags ?? [],
           prepTimeMinutes: cloneFrom.prepTimeMinutes ?? null,
           cookTimeMinutes: cloneFrom.cookTimeMinutes ?? null,
@@ -180,23 +164,12 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const {
-      title,
-      description,
-      content,
-      ingredients,
-      steps,
-      tags,
-      prepTimeMinutes,
-      cookTimeMinutes,
-      servings,
-    } = this.form.getRawValue();
+    const { title, description, content, tags, prepTimeMinutes, cookTimeMinutes, servings } =
+      this.form.getRawValue();
     const request = {
       title,
       description: description || null,
-      content: content || null,
-      ingredients,
-      steps,
+      content,
       tags,
       prepTimeMinutes,
       cookTimeMinutes,

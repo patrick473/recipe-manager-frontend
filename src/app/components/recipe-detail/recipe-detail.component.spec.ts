@@ -14,8 +14,6 @@ const mockRecipe: Recipe = {
   title: 'Pasta Carbonara',
   description: 'Classic Italian pasta',
   content: 'plain text',
-  ingredients: [],
-  steps: [],
   createdAt: '2024-01-01T10:00:00',
   updatedAt: '2024-01-01T10:00:00',
 };
@@ -84,7 +82,7 @@ describe('RecipeDetailComponent', () => {
     expect(component['recipe']()).toEqual(mockRecipe);
     expect(component['loading']()).toBe(false);
     expect(fakeSanitizer.bypassSecurityTrustHtml).toHaveBeenCalledWith('<p>plain text</p>\n');
-    expect(component['renderedNotes']()).toBe('<p>plain text</p>\n');
+    expect(component['renderedContent']()).toBe('<p>plain text</p>\n');
   });
 
   it('strips XSS payloads (e.g. onerror handlers, <script> tags) from recipe content before it reaches bypassSecurityTrustHtml', () => {
@@ -105,7 +103,7 @@ describe('RecipeDetailComponent', () => {
     expect(sanitizedHtml).not.toContain('<script');
     expect(sanitizedHtml).not.toContain('alert(1)');
     expect(sanitizedHtml).not.toContain('alert(2)');
-    expect(component['renderedNotes']()).toBe(sanitizedHtml);
+    expect(component['renderedContent']()).toBe(sanitizedHtml);
   });
 
   it('sets a "not found" message on a 404 load error', () => {
@@ -459,7 +457,7 @@ describe('RecipeDetailComponent', () => {
       const component = fixture.componentInstance;
 
       expect(component['canScale']()).toBe(false);
-      expect(component['renderedNotes']()).toBe('');
+      expect(component['renderedContent']()).toBe('');
     });
 
     it('onServingsTargetChange() is a no-op', () => {

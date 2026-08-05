@@ -9,8 +9,6 @@
  *
  * OpenAPI spec version: 0.0.1
  */
-import type { IngredientDto } from './ingredientDto';
-import type { RecipeStepDto } from './recipeStepDto';
 
 /**
  * Payload for creating or replacing a recipe
@@ -27,22 +25,8 @@ export interface RecipeRequest {
      * @nullable
      */
   description?: string | null;
-  /**
-     * Optional freeform notes in Markdown
-     * @maxLength 50000
-     * @nullable
-     */
-  content?: string | null;
-  /**
-     * @minItems 1
-     * @maxItems 100
-     */
-  ingredients: IngredientDto[];
-  /**
-     * @minItems 1
-     * @maxItems 100
-     */
-  steps: RecipeStepDto[];
+  /** Full recipe body in Markdown format */
+  content: string;
   /**
      * Optional freeform labels for categorizing and filtering recipes
      * @maxItems 20

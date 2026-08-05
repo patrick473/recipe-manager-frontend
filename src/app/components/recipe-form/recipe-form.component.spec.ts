@@ -11,8 +11,6 @@ const mockRecipe: Recipe = {
   title: 'Pasta Carbonara',
   description: null,
   content: '## Ingredients\n- Pasta\n- Eggs',
-  ingredients: [{ quantity: 200, unit: 'g', name: 'pasta' }, { name: 'eggs' }],
-  steps: [{ instruction: 'Cook the pasta.' }],
   tags: ['dinner'],
   prepTimeMinutes: 10,
   cookTimeMinutes: 20,
@@ -92,8 +90,6 @@ describe('RecipeFormComponent', () => {
         title: '',
         description: '',
         content: '',
-        ingredients: [{ name: '' }],
-        steps: [{ instruction: '' }],
         tags: [],
         prepTimeMinutes: null,
         cookTimeMinutes: null,
@@ -113,8 +109,6 @@ describe('RecipeFormComponent', () => {
         title: 'New Recipe',
         description: 'A tasty one',
         content: '## Ingredients\n- Salt',
-        ingredients: [{ name: 'Salt' }],
-        steps: [{ instruction: 'Season.' }],
       });
 
       component['onSubmit']();
@@ -123,8 +117,6 @@ describe('RecipeFormComponent', () => {
         title: 'New Recipe',
         description: 'A tasty one',
         content: '## Ingredients\n- Salt',
-        ingredients: [{ name: 'Salt' }],
-        steps: [{ instruction: 'Season.' }],
         tags: [],
         prepTimeMinutes: null,
         cookTimeMinutes: null,
@@ -148,8 +140,6 @@ describe('RecipeFormComponent', () => {
         title: 'Pasta Carbonara (Copy)',
         description: '',
         content: mockRecipe.content,
-        ingredients: mockRecipe.ingredients,
-        steps: mockRecipe.steps,
         tags: mockRecipe.tags,
         prepTimeMinutes: mockRecipe.prepTimeMinutes,
         cookTimeMinutes: mockRecipe.cookTimeMinutes,
@@ -172,8 +162,6 @@ describe('RecipeFormComponent', () => {
         title: 'Pasta Carbonara (Copy)',
         description: null,
         content: mockRecipe.content,
-        ingredients: mockRecipe.ingredients,
-        steps: mockRecipe.steps,
         tags: mockRecipe.tags,
         prepTimeMinutes: mockRecipe.prepTimeMinutes,
         cookTimeMinutes: mockRecipe.cookTimeMinutes,
@@ -270,8 +258,6 @@ describe('RecipeFormComponent', () => {
         title: mockRecipe.title,
         description: 'Updated description',
         content: mockRecipe.content,
-        ingredients: mockRecipe.ingredients,
-        steps: mockRecipe.steps,
         tags: mockRecipe.tags,
         prepTimeMinutes: mockRecipe.prepTimeMinutes,
         cookTimeMinutes: mockRecipe.cookTimeMinutes,
@@ -320,8 +306,6 @@ describe('RecipeFormComponent', () => {
       component['form'].patchValue({
         title: 'New Recipe',
         content: '## Ingredients\n- Salt',
-        ingredients: [{ name: 'Salt' }],
-        steps: [{ instruction: 'Season.' }],
       });
       component['onSubmit']();
 
@@ -329,8 +313,6 @@ describe('RecipeFormComponent', () => {
         title: 'New Recipe',
         description: null,
         content: '## Ingredients\n- Salt',
-        ingredients: [{ name: 'Salt' }],
-        steps: [{ instruction: 'Season.' }],
         tags: [],
         prepTimeMinutes: null,
         cookTimeMinutes: null,
@@ -356,8 +338,6 @@ describe('RecipeFormComponent', () => {
       component['form'].patchValue({
         title: 'New Recipe',
         content: '## Ingredients\n- Salt',
-        ingredients: [{ name: 'Salt' }],
-        steps: [{ instruction: 'Season.' }],
       });
       component['onSubmit']();
 
@@ -376,8 +356,6 @@ describe('RecipeFormComponent', () => {
       component['form'].patchValue({
         title: 'New Recipe',
         content: '## Ingredients\n- Salt',
-        ingredients: [{ name: 'Salt' }],
-        steps: [{ instruction: 'Season.' }],
       });
       component['onSubmit']();
 
@@ -461,8 +439,6 @@ describe('RecipeFormComponent', () => {
       component['form'].patchValue({
         title: 'New Recipe',
         content: '## Ingredients\n- Salt',
-        ingredients: [{ name: 'Salt' }],
-        steps: [{ instruction: 'Season.' }],
       });
       const file = makeFile('photo.png', 'image/png', 1024);
       selectFile(component, file);
@@ -511,8 +487,6 @@ describe('RecipeFormComponent', () => {
       component['form'].patchValue({
         title: 'New Recipe',
         content: '## Ingredients\n- Salt',
-        ingredients: [{ name: 'Salt' }],
-        steps: [{ instruction: 'Season.' }],
       });
       const file = makeFile('photo.png', 'image/png', 1024);
       selectFile(component, file);

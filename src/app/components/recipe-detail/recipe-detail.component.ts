@@ -14,7 +14,6 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
-import { IngredientDto } from '../../api/generated/model/ingredientDto';
 import { Recipe } from '../../models/recipe.model';
 import { AuthService } from '../../services/auth.service';
 import { FavoritesService } from '../../services/favorites.service';
@@ -24,7 +23,6 @@ import { ButtonDirective } from '../../shared/button.directive';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { resolveImageUrl } from '../../shared/image-url.util';
 import {
-  formatScaledQuantity,
   hasScalableIngredients,
   scaleIngredientsMarkdown,
 } from '../../shared/ingredient-scaling.util';
@@ -88,16 +86,9 @@ export class RecipeDetailComponent implements OnInit {
   protected readonly totalTimeMinutes = totalTimeMinutes;
   protected readonly resolveImageUrl = resolveImageUrl;
 
-  protected readonly hasStructuredContent = computed(() => {
-    const recipe = this.recipe();
-    return !!recipe && (recipe.ingredients.length > 0 || recipe.steps.length > 0);
-  });
-
-  protected readonly canScale = computed(() => {
-    const recipe = this.recipe();
-    return !!recipe && (recipe.ingredients.some((ingredient) => ingredient.quantity != null) ||
-      hasScalableIngredients(recipe.content ?? ''));
-  });
+  protected readonly canScale = computed(() =>
+    hasScalableIngredients(this.recipe()?.content ?? ''),
+  );
 
   /** Rounded target servings shown/edited by the servings stepper; null when the recipe has no stored servings. */
   protected readonly targetServings = computed(() => {
@@ -105,14 +96,12 @@ export class RecipeDetailComponent implements OnInit {
     return servings ? Math.round(servings * this.scaleFactor()) : null;
   });
 
-  protected readonly renderedNotes = computed<SafeHtml>(() => {
+  protected readonly renderedContent = computed<SafeHtml>(() => {
     const recipe = this.recipe();
     if (!recipe) return '';
 
-    const content = this.hasStructuredContent()
-      ? recipe.content ?? ''
-      : scaleIngredientsMarkdown(recipe.content ?? '', this.scaleFactor());
-    const html = marked.parse(content) as string;
+    const scaledContent = scaleIngredientsMarkdown(recipe.content, this.scaleFactor());
+    const html = marked.parse(scaledContent) as string;
     const clean = DOMPurify.sanitize(html);
     return this.sanitizer.bypassSecurityTrustHtml(clean);
   });
@@ -148,19 +137,6 @@ export class RecipeDetailComponent implements OnInit {
 
   protected onMultiplierSelect(factor: number): void {
     this.scaleFactor.set(factor);
-  }
-
-  protected formatIngredient(ingredient: IngredientDto): string {
-    const factor = this.scaleFactor();
-    const quantity = ingredient.quantity == null
-      ? ''
-      : formatScaledQuantity(ingredient.quantity * factor, false);
-    const quantityMax = ingredient.quantityMax == null
-      ? ''
-      : `–${formatScaledQuantity(ingredient.quantityMax * factor, false)}`;
-    return [quantity + quantityMax, ingredient.unit, ingredient.name, ingredient.note]
-      .filter(Boolean)
-      .join(' ');
   }
 
   protected printRecipe(): void {

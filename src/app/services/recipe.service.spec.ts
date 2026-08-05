@@ -12,7 +12,6 @@ const mockRecipes: Recipe[] = [
     title: 'Pasta Carbonara',
     description: 'Classic Italian pasta',
     content: '## Ingredients\n- Pasta\n- Eggs',
-    ingredients: [], steps: [],
     createdAt: '2024-01-01T10:00:00',
     updatedAt: '2024-01-01T10:00:00',
   },
@@ -21,7 +20,6 @@ const mockRecipes: Recipe[] = [
     title: 'Banana Bread',
     description: null,
     content: '## Ingredients\n- Bananas\n- Flour',
-    ingredients: [], steps: [],
     createdAt: '2024-01-02T10:00:00',
     updatedAt: '2024-01-02T10:00:00',
   },
@@ -150,8 +148,6 @@ describe('RecipeService', () => {
         title: 'New Recipe',
         description: 'A brand new recipe',
         content: '## Ingredients\n- Salt',
-        ingredients: [{ name: 'Salt' }],
-        steps: [{ instruction: 'Season.' }],
       };
       let result: Recipe | undefined;
 
@@ -170,7 +166,7 @@ describe('RecipeService', () => {
     it('increments recipeCount on success', () => {
       expect(service.recipeCount()).toBe(0);
 
-      service.create({ title: 'New Recipe', ingredients: [{ name: 'Salt' }], steps: [{ instruction: 'Season.' }] }).subscribe();
+      service.create({ title: 'New Recipe', content: '## Ingredients\n- Salt' }).subscribe();
       httpMock.expectOne('/recipes').flush(mockRecipes[0]);
 
       expect(service.recipeCount()).toBe(1);
@@ -183,8 +179,6 @@ describe('RecipeService', () => {
         title: 'Updated Recipe',
         description: 'Updated description',
         content: '## Ingredients\n- Pepper',
-        ingredients: [{ name: 'Pepper' }],
-        steps: [{ instruction: 'Season.' }],
       };
       let result: Recipe | undefined;
 
