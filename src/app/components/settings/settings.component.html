@@ -1,0 +1,12 @@
+<h1>Settings</h1>
+
+<label for="theme-select">Theme</label>
+<select
+  id="theme-select"
+  [value]="currentTheme()"
+  (change)="switchTheme($any($event.target).value)"
+>
+  <option *ngFor="let themeName of availableThemes" [value]="themeName">
+    {{ themeName | titlecase }}
+  </option>
+</select>

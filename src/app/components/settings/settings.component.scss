@@ -1,0 +1,18 @@
+:host {
+  display: block;
+  margin: var(--space-5);
+
+  label {
+    display: inline-block;
+    margin-bottom: var(--space-2);
+    font-weight: 600;
+  }
+
+  select {
+    padding: var(--space-2);
+    font-size: var(--font-size-md);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    width: 200px;
+  }
+}

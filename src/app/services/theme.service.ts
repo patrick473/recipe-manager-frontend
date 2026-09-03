@@ -1,33 +1,51 @@
 import { Injectable, signal } from '@angular/core';
 
-const STORAGE_KEY = 'theme';
+export type ThemeName = 'cucumber' | 'mango';
 
-function initialDarkMode(): boolean {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored === 'dark') return true;
-  if (stored === 'light') return false;
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
-}
+const THEME_STORAGE_KEY = 'app_theme';
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
-  readonly darkMode = signal(initialDarkMode());
+  private readonly _theme = signal<ThemeName>('cucumber');
+
+  readonly theme = this._theme.asReadonly();
 
   constructor() {
-    this.apply(this.darkMode());
+    // Initialize theme from localStorage or prefers-color-scheme
+    const saved = localStorage.getItem(THEME_STORAGE_KEY) as ThemeName | null;
+    if (saved === 'cucumber' || saved === 'mango') {
+      this._theme.set(saved);
+    } else {
+      // Detect from system preference
+      const prefersMango = window.matchMedia('(prefers-color-scheme: mango)').matches;
+      // Using mango as custom theme, fall back to cucumber
+      if (prefersMango) {
+        this._theme.set('mango');
+      } else {
+        this._theme.set('cucumber');
+      }
+    }
+    this.applyTheme(this._theme());
+    this._theme.subscribe((theme) => {
+      this.applyTheme(theme);
+      localStorage.setItem(THEME_STORAGE_KEY, theme);
+    });
   }
 
-  toggle(): void {
-    this.set(!this.darkMode());
+  toggle() {
+    const next = this._theme() === 'cucumber' ? 'mango' : 'cucumber';
+    this._theme.set(next);
   }
 
-  set(darkMode: boolean): void {
-    this.darkMode.set(darkMode);
-    localStorage.setItem(STORAGE_KEY, darkMode ? 'dark' : 'light');
-    this.apply(darkMode);
+  set(theme: ThemeName) {
+    if (theme === 'cucumber' || theme === 'mango') {
+      this._theme.set(theme);
+    }
   }
 
-  private apply(darkMode: boolean): void {
-    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+  private applyTheme(theme: ThemeName) {
+    const htmlEl = document.documentElement;
+    htmlEl.classList.remove('theme-cucumber', 'theme-mango');
+    htmlEl.classList.add(`theme-${theme}`);
   }
 }

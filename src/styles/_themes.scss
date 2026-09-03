@@ -1,0 +1,29 @@
+$cucumber-main: #7cfc00;
+$cucumber-accent: #3f8600;
+
+$mango-main: #ffcc00;
+$mango-accent: #e68a00;
+
+:root {
+  --color-text: #222;
+  --color-background: #fff;
+  --color-surface: #fafafa;
+  --color-border: #ddd;
+
+  --color-primary: $cucumber-main;
+  --color-primary-dark: $cucumber-accent;
+}
+
+.theme-cucumber {
+  --color-primary: $cucumber-main;
+  --color-primary-dark: $cucumber-accent;
+  background-color: #e6f4d9;
+  color: #2a2a2a;
+}
+
+.theme-mango {
+  --color-primary: $mango-main;
+  --color-primary-dark: $mango-accent;
+  background-color: #fff7cc;
+  color: #4a3b1a;
+}
