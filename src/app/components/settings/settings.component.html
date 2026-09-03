@@ -1,0 +1,21 @@
+<h2>Settings</h2>
+
+<section>
+  <h3>Theme</h3>
+  <label for="theme-select">Select Theme:</label>
+  <select id="theme-select" [value]="selectedTheme()" (change)="onThemeChange($event.target.value)">
+    <option *ngFor="let theme of availableThemes" [value]="theme">
+      {{ theme | titlecase }}
+    </option>
+  </select>
+</section>
+
+<section>
+  <h3>Color Mode</h3>
+  <label for="mode-select">Select Mode:</label>
+  <select id="mode-select" [value]="selectedMode()" (change)="onModeChange($event.target.value)">
+    <option *ngFor="let mode of availableModes" [value]="mode">
+      {{ mode | titlecase }}
+    </option>
+  </select>
+</section>

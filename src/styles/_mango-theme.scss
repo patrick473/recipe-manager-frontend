@@ -1,0 +1,40 @@
+$mango-light-background: #fff7e6;
+$mango-light-foreground: #6b3e00;
+$mango-dark-background: #4d2e00;
+$mango-dark-foreground: #ffe68b;
+
+.cucumber-light,
+.cucumber-dark {
+  // no styles here, for reference
+}
+
+.mango-light {
+  background-color: $mango-light-background;
+  color: $mango-light-foreground;
+
+  // Example overrides
+  a {
+    color: #ffaf33;
+  }
+
+  button {
+    background-color: #ffd966;
+    border-color: #ffaf33;
+    color: $mango-light-foreground;
+  }
+}
+
+.mango-dark {
+  background-color: $mango-dark-background;
+  color: $mango-dark-foreground;
+
+  a {
+    color: #ffcf75;
+  }
+
+  button {
+    background-color: #ca8c00;
+    border-color: #ffcf75;
+    color: $mango-dark-foreground;
+  }
+}

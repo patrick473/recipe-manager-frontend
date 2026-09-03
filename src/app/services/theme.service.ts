@@ -1,33 +1,73 @@
 import { Injectable, signal } from '@angular/core';
 
-const STORAGE_KEY = 'theme';
+export type ThemeName = 'cucumber' | 'mango';
+export type ThemeMode = 'light' | 'dark';
 
-function initialDarkMode(): boolean {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored === 'dark') return true;
-  if (stored === 'light') return false;
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+export interface Theme {
+  name: ThemeName;
+  mode: ThemeMode;
 }
+
+const STORAGE_KEY = 'selectedTheme';
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
-  readonly darkMode = signal(initialDarkMode());
+  readonly theme = signal<Theme>({ name: 'cucumber', mode: 'light' });
 
   constructor() {
-    this.apply(this.darkMode());
+    this.loadTheme();
   }
 
-  toggle(): void {
-    this.set(!this.darkMode());
+  private loadTheme(): void {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed: Theme = JSON.parse(saved);
+        if (
+          (parsed.name === 'cucumber' || parsed.name === 'mango') &&
+          (parsed.mode === 'light' || parsed.mode === 'dark')
+        ) {
+          this.theme.set(parsed);
+          this.applyTheme(parsed);
+          return;
+        }
+      } catch {
+        // ignore invalid
+      }
+    }
+    // fallback default
+    this.applyTheme(this.theme());
   }
 
-  set(darkMode: boolean): void {
-    this.darkMode.set(darkMode);
-    localStorage.setItem(STORAGE_KEY, darkMode ? 'dark' : 'light');
-    this.apply(darkMode);
+  /**
+   * Sets the theme to the given name and mode, applies it immediately,
+   * and persists to localStorage.
+   */
+  setTheme(name: ThemeName, mode: ThemeMode): void {
+    const nextTheme: Theme = { name, mode };
+    this.theme.set(nextTheme);
+    this.applyTheme(nextTheme);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextTheme));
   }
 
-  private apply(darkMode: boolean): void {
-    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+  /** Applies the theme by adding/removing CSS classes on document.body */
+  private applyTheme(theme: Theme): void {
+    const { name, mode } = theme;
+    const body = document.body;
+    // Remove previous theme classes
+    for (const themeName of ['cucumber', 'mango']) {
+      for (const themeMode of ['light', 'dark']) {
+        body.classList.remove(`${themeName}-${themeMode}`);
+      }
+    }
+    // Add the current theme class
+    body.classList.add(`${name}-${mode}`);
+  }
+
+  /** Toggles light/dark mode, keeping the same theme name */
+  toggleMode(): void {
+    const current = this.theme();
+    const nextMode = current.mode === 'light' ? 'dark' : 'light';
+    this.setTheme(current.name, nextMode);
   }
 }
