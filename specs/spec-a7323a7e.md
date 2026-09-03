@@ -15,3 +15,4 @@ created_at: 2026-09-02T12:16:17.218837800Z
 - Add functionality on the settings page to allow users to switch between themes, specifically between 'cucumber' and 'mango'.
 - Ensure the theme switch updates the application appearance immediately upon user selection.
 - Persist the selected theme preference so that it is retained across user sessions.
+- Both themes should still support light and dark mode
